@@ -1,0 +1,90 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+        http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd">
+
+    <changeSet author="l.lyakh" id="create-product-table">
+        <createTable tableName="product" remarks="Банковские продукты сервиса с их условиями/характеристиками">
+            <column autoIncrement="true" name="product_id" type="INTEGER" remarks="Уникальный id продукта">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="product_pkey"/>
+            </column>
+
+            <column name="product_code" type="VARCHAR" remarks="Уникальный продуктовый код">
+                <constraints nullable="false" unique="true" uniqueConstraintName="code_uk"/>
+            </column>
+
+            <column name="title" type="VARCHAR" remarks="Удобочитаемое название для клиента">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="version" type="INTEGER" remarks="Версия продукта">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="min_load_term" type="INTEGER" remarks="Минимальный срок кредита">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="max_load_term" type="INTEGER" remarks="Максимальный срок кредита">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="min_principal_amount" type="INTEGER" remarks="Минимальная возможная сумма кредита">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="max_principal_amount" type="INTEGER" remarks="Максимальная возможная сумма кредита">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="min_interest" type="INTEGER"
+                    remarks="Минимальная процентная ставка, под которую клиент может получить кредит">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="max_interest" type="INTEGER"
+                    remarks="Максимальная процентная ставка, под которую клиент может получить кредит">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="min_origination_amount" type="INTEGER"
+                    remarks="Минимальная сумма комиссий, которая прибавится к полной стоимости кредита">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="max_origination_amount" type="INTEGER"
+                    remarks="Максимальная сумма комиссий, которая прибавится к полной стоимости кредита">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="l.lyakh" id="create_index_on_product">
+        <createIndex indexName="idx_product" tableName="product">
+            <column name="product_id"/>
+            <column name="product_code"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet author="l.lyakh" id="load_product">
+        <loadData file="csv_files/product.csv" separator="," tableName="product">
+            <column name="product_code" type="NVARCHAR"/>
+            <column name="title" type="NVARCHAR"/>
+            <column name="version" type="INTEGER"/>
+            <column name="min_load_term" type="VARCHAR"/>
+            <column name="max_load_term" type="INTEGER"/>
+            <column name="min_principal_amount" type="INTEGER"/>
+            <column name="max_principal_amount" type="INTEGER"/>
+            <column name="min_interest" type="INTEGER"/>
+            <column name="max_interest" type="INTEGER"/>
+            <column name="min_origination_amount" type="INTEGER"/>
+            <column name="max_origination_amount" type="INTEGER"/>
+        </loadData>
+    </changeSet>
+
+</databaseChangeLog>

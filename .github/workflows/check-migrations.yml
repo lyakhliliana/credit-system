@@ -1,7 +1,7 @@
 name: Test migrations and draw DB schema
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "hw" ]
   pull_request:
     branches: [ "master" ]
   workflow_dispatch:

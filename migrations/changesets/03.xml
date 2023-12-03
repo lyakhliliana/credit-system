@@ -1,0 +1,71 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+        http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd">
+
+    <changeSet author="l.lyakh" id="create-agreement-table">
+        <createTable tableName="agreement" remarks="Таблица кредитных договоров">
+            <column autoIncrement="true" name="agreement_id" type="INTEGER" remarks="Уникальный id договора">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="agreement_id"/>
+            </column>
+
+            <column name="product_code" type="VARCHAR" remarks="Продукт, к которому относится договор">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="person_id" type="INTEGER" remarks="Клиент, к которому относится договор">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="load_term" type="INTEGER" remarks="Срок кредита">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="principal_amount" type="INTEGER" remarks="Сумма кредита">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="interest" type="INTEGER" remarks="Процентная ставка кредита">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="origination_amount" type="INTEGER"
+                    remarks="Сумма комиссии, которая прибавится к стоимости кредита">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="agreement_dttm" type="TIMESTAMP" remarks="Дата и время заключения договора">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="status" type="VARCHAR" remarks="Статус договора">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+    </changeSet>
+
+
+    <changeSet author="l.lyakh" id="create-foreign-keys">
+        <addForeignKeyConstraint baseColumnNames="product_code" baseTableName="agreement"
+                                 constraintName="product_code_fk"
+                                 referencedColumnNames="product_code" referencedTableName="product"/>
+        <addForeignKeyConstraint baseColumnNames="person_id" baseTableName="agreement" constraintName="person_id_fk"
+                                 referencedColumnNames="person_id" referencedTableName="person"/>
+    </changeSet>
+
+    <changeSet author="l.lyakh" id="create_index_on_agreement">
+        <createIndex indexName="idx_agreement" tableName="agreement">
+            <column name="agreement_id"/>
+            <column name="person_id"/>
+            <column name="product_code"/>
+        </createIndex>
+    </changeSet>
+
+
+</databaseChangeLog>
