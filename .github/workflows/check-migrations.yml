@@ -75,9 +75,3 @@ jobs:
         run: docker run --rm -w /app -v "$(pwd):/app" --network "host" ${{env.TBLS_IMAGE}} doc
         if: success() || failure()
 
-      - name: Save DB schema to artifacts
-        uses: actions/upload-artifact@v3.1.3
-        with:
-          name: db-schema
-          path: dbdoc/schema.svg
-          if-no-files-found: error
