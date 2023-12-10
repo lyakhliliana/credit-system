@@ -26,15 +26,15 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="principal_amount" type="INTEGER" remarks="Сумма кредита">
+            <column name="principal_amount" type="NUMERIC" remarks="Сумма кредита">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="interest" type="INTEGER" remarks="Процентная ставка кредита">
+            <column name="interest" type="NUMERIC(4,2)" remarks="Процентная ставка кредита">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="origination_amount" type="INTEGER"
+            <column name="origination_amount" type="NUMERIC"
                     remarks="Сумма комиссии, которая прибавится к стоимости кредита">
                 <constraints nullable="false"/>
             </column>
@@ -54,15 +54,17 @@
     <changeSet author="l.lyakh" id="create-foreign-keys">
         <addForeignKeyConstraint baseColumnNames="product_code" baseTableName="agreement"
                                  constraintName="product_code_fk"
-                                 referencedColumnNames="product_code" referencedTableName="product"/>
+                                 referencedColumnNames="code" referencedTableName="product"/>
         <addForeignKeyConstraint baseColumnNames="person_id" baseTableName="agreement" constraintName="person_id_fk"
                                  referencedColumnNames="person_id" referencedTableName="person"/>
     </changeSet>
 
-    <changeSet author="l.lyakh" id="create_index_on_agreement">
-        <createIndex indexName="idx_agreement" tableName="agreement">
-            <column name="agreement_id"/>
+    <changeSet author="l.lyakh" id="create_indexes_on_agreement">
+        <createIndex indexName="idx_person_id_on_agreement" tableName="agreement">
             <column name="person_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_product_code_on_agreement" tableName="agreement">
             <column name="product_code"/>
         </createIndex>
     </changeSet>

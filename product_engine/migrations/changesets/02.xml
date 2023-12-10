@@ -14,7 +14,7 @@
                 <constraints nullable="false" primaryKey="true" primaryKeyName="product_pkey"/>
             </column>
 
-            <column name="product_code" type="VARCHAR" remarks="Уникальный продуктовый код">
+            <column name="code" type="VARCHAR" remarks="Уникальный продуктовый код">
                 <constraints nullable="false" unique="true" uniqueConstraintName="code_uk"/>
             </column>
 
@@ -34,30 +34,30 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="min_principal_amount" type="INTEGER" remarks="Минимальная возможная сумма кредита">
+            <column name="min_principal_amount" type="NUMERIC" remarks="Минимальная возможная сумма кредита">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="max_principal_amount" type="INTEGER" remarks="Максимальная возможная сумма кредита">
+            <column name="max_principal_amount" type="NUMERIC" remarks="Максимальная возможная сумма кредита">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="min_interest" type="INTEGER"
+            <column name="min_interest" type="NUMERIC(4,2)"
                     remarks="Минимальная процентная ставка, под которую клиент может получить кредит">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="max_interest" type="INTEGER"
+            <column name="max_interest" type="NUMERIC(4,2)"
                     remarks="Максимальная процентная ставка, под которую клиент может получить кредит">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="min_origination_amount" type="INTEGER"
+            <column name="min_origination_amount" type="NUMERIC"
                     remarks="Минимальная сумма комиссий, которая прибавится к полной стоимости кредита">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="max_origination_amount" type="INTEGER"
+            <column name="max_origination_amount" type="NUMERIC"
                     remarks="Максимальная сумма комиссий, которая прибавится к полной стоимости кредита">
                 <constraints nullable="false"/>
             </column>
@@ -65,15 +65,14 @@
     </changeSet>
 
     <changeSet author="l.lyakh" id="create_index_on_product">
-        <createIndex indexName="idx_product" tableName="product">
-            <column name="product_id"/>
-            <column name="product_code"/>
+        <createIndex indexName="idx_code_on_product" tableName="product">
+            <column name="code"/>
         </createIndex>
     </changeSet>
 
     <changeSet author="l.lyakh" id="load_product">
         <loadData file="csv_files/product.csv" separator="," tableName="product">
-            <column name="product_code" type="NVARCHAR"/>
+            <column name="code" type="NVARCHAR"/>
             <column name="title" type="NVARCHAR"/>
             <column name="version" type="INTEGER"/>
             <column name="min_load_term" type="VARCHAR"/>

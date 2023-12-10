@@ -30,11 +30,11 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="payment_amt_debt" type="INTEGER" remarks="Сумма фактического платежа">
+            <column name="payment_amt_debt" type="NUMERIC" remarks="Сумма фактического платежа">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="payment_amt_proc" type="INTEGER" remarks="Сумма платежа по процентам">
+            <column name="payment_amt_proc" type="NUMERIC" remarks="Сумма платежа по процентам">
                 <constraints nullable="false"/>
             </column>
 
@@ -56,9 +56,8 @@
     </changeSet>
 
     <changeSet author="l.lyakh" id="create_index_on_payment">
-        <createIndex indexName="idx_payment" tableName="schedule_payment">
+        <createIndex indexName="idx_agreement_id_on_payment" tableName="schedule_payment">
             <column name="agreement_id"/>
-            <column name="payment_id"/>
         </createIndex>
     </changeSet>
 

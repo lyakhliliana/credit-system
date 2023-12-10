@@ -30,7 +30,7 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="passport_no" type="INTEGER" remarks="Серия и номер паспорта">
+            <column name="passport_no" type="VARCHAR" remarks="Серия и номер паспорта">
                 <constraints nullable="false"/>
             </column>
 
@@ -45,8 +45,7 @@
     </changeSet>
 
     <changeSet author="l.lyakh" id="create_index_on_person">
-        <createIndex indexName="idx_person" tableName="person">
-            <column name="person_id"/>
+        <createIndex indexName="idx_passport_no_on_person" tableName="person">
             <column name="passport_no"/>
         </createIndex>
     </changeSet>
