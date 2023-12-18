@@ -42,6 +42,7 @@ services:
       - ./configs/servers.json:/pgadmin4/servers.json:ro
       - ./configs/pgpass:/pgadmin4/pgpass:ro
 
+
 networks:
   fintech-network:
     name: "fintech-network"
