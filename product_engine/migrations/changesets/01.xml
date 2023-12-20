@@ -34,6 +34,10 @@
                 <constraints nullable="false"/>
             </column>
 
+            <column name="email" type="VARCHAR" remarks="Почта">
+                <constraints nullable="false"/>
+            </column>
+
             <column name="mobile_phone_no" type="VARCHAR" remarks="Мобильный номер клиента">
                 <constraints nullable="false"/>
             </column>

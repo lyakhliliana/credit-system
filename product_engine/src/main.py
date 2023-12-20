@@ -2,16 +2,16 @@ import random
 from datetime import datetime
 from typing import Sequence
 
-import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Response
-from sqlalchemy import select, delete
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from product_engine.src.dao import ProductDao, PersonDao, AgreementDao
-from product_engine.src.database import get_session, Repository
-from product_engine.src.dto import ProductBaseDto, ProductCreateDto, AgreementCreateDto
-from product_engine.src.utils import JsonBeautify
+from product_engine.src.database_models.dao import ProductDao, PersonDao, AgreementDao
+from product_engine.src.database_models.database import get_session, Repository
+from product_engine.src.database_models.dto import ProductBaseDto, ProductCreateDto, AgreementCreateDto
+
+from product_engine.src.utils.http_output import JsonBeautify
+from product_engine.src.utils.transaction_check import check_valid_agreement_condition
 
 app = FastAPI(
     title='Fintech API',
@@ -63,9 +63,6 @@ async def get_product(code: str, session: AsyncSession = Depends(get_session)) -
     :param session: The connection session with DB
     :return: if product code is available, then retrieve product info, else Not Found
     """
-    # product: ProductDao =
-    #     await session.execute(select(ProductDao).where(ProductDao.code == code))
-    # ).scalars().one_or_none()
     product: ProductDao = (await Repository.get(ProductDao, session, ['code'], [code])).one_or_none()
     if product is None:
         raise HTTPException(status_code=404, detail='Not found')
@@ -95,9 +92,6 @@ async def set_product(
     :param session: The connection session with DB
     :return: If product is not available, then return 200, otherwise raise error 409
     """
-    # product: ProductDao = (
-    #     await session.execute(select(ProductDao).where(ProductDao.code == product_to_post.code))
-    # ).scalars().one_or_none()
     product: ProductDao = (await Repository.get(ProductDao, session,
                                                 ['code'], [product_to_post.code])).one_or_none()
     if product:
@@ -118,9 +112,7 @@ async def set_product(
         )
     except SQLAlchemyError as ex:
         raise HTTPException(status_code=409, detail=f'Неверные данные, {ex}!')
-    # session.add(product_n)
-    # await session.commit()
-    # await session.refresh(product_n)
+
     await Repository.create(ProductDao, session, product_n)
     return Response(
         media_type='text/plain',
@@ -136,14 +128,9 @@ async def deleted_product(code: str, session: AsyncSession = Depends(get_session
     :param session: The connection session with DB
     :return: response 204
     """
-    # product: ProductDao = (
-    #     await session.execute(select(ProductDao).where(ProductDao.code == code))
-    # ).scalars().one_or_none()
     product: ProductDao = (await Repository.get(ProductDao, session,
                                                 ['code'], [code])).one_or_none()
     if product:
-        # await session.execute(delete(ProductDao).where(ProductDao.code == code))
-        # await session.commit()
         await Repository.delete(ProductDao, session, code)
     return Response(
         status_code=204,
@@ -163,26 +150,18 @@ async def set_agreement(
     :param session: The connection session with DB
     :return: Agreement id, otherwise 400
     """
-    # product: ProductDao = (
-    #     await session.execute(select(ProductDao).where(ProductDao.code == agreement_to_post.product_code))
-    # ).scalars().one_or_none()
+
     product: ProductDao = (await Repository.get(ProductDao, session,
                                                 ['code'], [agreement_to_post.product_code])).one_or_none()
     if product is None:
         raise HTTPException(status_code=400, detail="Продукт с таким кодом не существует")
-    # person: PersonDao = (
-    #     await session.execute(select(PersonDao).where(
-    #         PersonDao.first_nm == agreement_to_post.first_name and
-    #         PersonDao.last_nm == agreement_to_post.second_name and
-    #         PersonDao.middle_nm == agreement_to_post.third_name and
-    #         PersonDao.birth_dt == agreement_to_post.birthday and
-    #         PersonDao.passport_no == agreement_to_post.passport_number
-    #     ))
-    # ).scalars().one_or_none()
+
     person: PersonDao = (
-        await Repository.get(PersonDao, session, ['first_nm', 'last_nm', 'middle_nm', 'birth_dt', 'passport_no'],
+        await Repository.get(PersonDao, session,
+                             ['first_nm', 'last_nm', 'middle_nm', 'birth_dt', 'passport_no', 'email'],
                              [agreement_to_post.first_name, agreement_to_post.second_name, agreement_to_post.third_name,
-                              agreement_to_post.birthday, agreement_to_post.passport_number])).one_or_none()
+                              datetime.strptime(agreement_to_post.birthday, '%d.%m.%Y'), agreement_to_post.passport_number,
+                              agreement_to_post.email])).one_or_none()
     if person:
         person_n = person
     else:
@@ -192,15 +171,15 @@ async def set_agreement(
             middle_nm=agreement_to_post.third_name,
             birth_dt=datetime.strptime(agreement_to_post.birthday, '%d.%m.%Y'),
             passport_no=agreement_to_post.passport_number,
+            email=agreement_to_post.email,
             mobile_phone_no=agreement_to_post.phone,
             monthly_income_amt=int(agreement_to_post.salary)
         )
-        # session.add(person_n)
-        # await session.commit()
-        # await session.refresh(person_n)
-        await Repository.create(ProductDao, session, person_n)
+        await Repository.create(PersonDao, session, person_n)
+
     origination_amt = random.random() * (float(product.max_origination_amount) - float(product.min_origination_amount))
     origination_amt += float(product.min_origination_amount)
+
     agreement_n = AgreementDao(
         product_code=agreement_to_post.product_code,
         person_id=person_n.person_id,
@@ -211,9 +190,10 @@ async def set_agreement(
         agreement_dttm=datetime.now(),
         status="NEW"
     )
-    # session.add(agreement_n)
-    # await session.commit()
-    # await session.refresh(agreement_n)
+
+    if not check_valid_agreement_condition(product=product, agreement=agreement_n):
+        raise HTTPException(status_code=400, detail="Данные договора не соответствуют продукту")
+
     await Repository.create(AgreementDao, session, agreement_n)
     return agreement_n.agreement_id
 

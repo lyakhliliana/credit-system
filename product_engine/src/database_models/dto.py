@@ -35,6 +35,7 @@ class PersonBaseDto(BaseModel):
     middle_nm: str
     birth_dt: date
     passport_no: str
+    email: str
     mobile_phone_no: str
     monthly_income_amt: str
 

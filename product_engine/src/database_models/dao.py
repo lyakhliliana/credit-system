@@ -1,7 +1,7 @@
 from sqlalchemy import Integer, String, Column, DateTime, ForeignKey, Numeric, Date
 from sqlalchemy.orm import relationship
 
-from product_engine.src.database import Base
+from product_engine.src.database_models.database import Base
 
 
 class ProductDao(Base):
@@ -29,6 +29,7 @@ class PersonDao(Base):
     middle_nm = Column(String(30), nullable=True)
     birth_dt = Column(Date, nullable=False)
     passport_no = Column(String(30), index=True, nullable=False)
+    email = Column(String(30), nullable=False)
     mobile_phone_no = Column(String(12), nullable=False)
     monthly_income_amt = Column(Integer, nullable=False)
     agreement = relationship('AgreementDao', back_populates='person')
