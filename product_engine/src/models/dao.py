@@ -1,10 +1,11 @@
 from sqlalchemy import Integer, String, Column, DateTime, ForeignKey, Numeric, Date
 from sqlalchemy.orm import relationship
 
-from product_engine.src.database_models.database import Base
+from database.base_orm_model import BaseOrmModel
+from product_engine.src.models.dto import ProductDto, AgreementDto
 
 
-class ProductDao(Base):
+class ProductDao(BaseOrmModel):
     __tablename__ = 'product'
     product_id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     code = Column(String(100), index=True, nullable=False, unique=True)
@@ -20,8 +21,23 @@ class ProductDao(Base):
     max_origination_amount = Column(Numeric, nullable=False)
     agreement = relationship('AgreementDao', back_populates='product')
 
+    def convert_to_dto(self) -> ProductDto:
+        return ProductDto(
+            product_id=self.product_id,
+            code=self.code,
+            title=self.title,
+            version=self.version,
+            min_load_term=self.min_load_term,
+            max_load_term=self.max_load_term,
+            min_principal_amount=self.min_principal_amount,
+            max_principal_amount=self.max_principal_amount,
+            min_interest=self.min_interest,
+            max_interest=self.max_interest,
+            min_origination_amount=self.min_origination_amount,
+            max_origination_amount=self.max_origination_amount)
 
-class PersonDao(Base):
+
+class PersonDao(BaseOrmModel):
     __tablename__ = 'person'
     person_id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     first_nm = Column(String(30), nullable=False)
@@ -35,7 +51,7 @@ class PersonDao(Base):
     agreement = relationship('AgreementDao', back_populates='person')
 
 
-class AgreementDao(Base):
+class AgreementDao(BaseOrmModel):
     __tablename__ = 'agreement'
     agreement_id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     product_code = Column(String(100), ForeignKey('product.code'), index=True, nullable=False)
@@ -50,8 +66,20 @@ class AgreementDao(Base):
     product = relationship('ProductDao', back_populates='agreement')
     person = relationship('PersonDao', back_populates='agreement')
 
+    def convert_to_dto(self) -> AgreementDto:
+        return AgreementDto(
+            agreement_id=self.agreement_id,
+            product_code=self.product_code,
+            person_id=self.person_id,
+            load_term=self.load_term,
+            principal_amount=self.principal_amount,
+            interest=self.interest,
+            origination_amount=self.origination_amount,
+            agreement_dttm=self.agreement_dttm,
+            status=self.status)
 
-class PaymentDao(Base):
+
+class PaymentDao(BaseOrmModel):
     __tablename__ = 'schedule_payment'
     payment_id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     agreement_id = Column(Integer, ForeignKey('agreement.agreement_id'), index=True, nullable=False)

@@ -29,7 +29,6 @@ class ProductDto(ProductBaseDto):
 
 
 class PersonBaseDto(BaseModel):
-    person_id: int
     first_nm: str
     last_nm: str
     middle_nm: str
@@ -52,7 +51,6 @@ class PersonDto(PersonBaseDto):
 
 
 class AgreementBaseDto(BaseModel):
-    agreement_id: int
     product_code: str
     person_id: int
     load_term: int
@@ -70,7 +68,7 @@ class AgreementDto(AgreementBaseDto):
         orm_mode = True
 
 
-class AgreementCreateDto(BaseModel):
+class ApplicationCreateDto(BaseModel):
     product_code: str
     first_name: str
     second_name: str
@@ -123,3 +121,7 @@ class PaymentBaseDto(BaseModel):
     payment_amt_proc: float
     serial_nmb_payment: int
     status: str
+
+
+class PaymentDto(PaymentBaseDto):
+    payment_id: int

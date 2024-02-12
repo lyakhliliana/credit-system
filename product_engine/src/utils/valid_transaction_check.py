@@ -1,4 +1,4 @@
-from product_engine.src.database_models.dao import ProductDao, AgreementDao
+from product_engine.src.models.dao import ProductDao, AgreementDao
 
 
 def check_valid_agreement_condition(product: ProductDao, agreement: AgreementDao) -> bool:

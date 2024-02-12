@@ -1,0 +1,30 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+        http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd">
+
+    <changeSet author="l.lyakh" id="create-origination-table">
+        <createTable tableName="origination" remarks="Таблица для проверки статуса документа">
+            <column name="agreement_id" type="INTEGER">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="agreement_id"/>
+            </column>
+
+            <column name="status" type="VARCHAR" remarks="Статус проверки документа">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="l.lyakh" id="create_index_on_status">
+        <createIndex indexName="idx_status" tableName="origination">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+
+</databaseChangeLog>
