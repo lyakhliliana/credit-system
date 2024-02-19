@@ -7,6 +7,6 @@ COPY .  origination
 
 RUN pip install --no-cache-dir --upgrade -r origination/requirements.txt
 
-EXPOSE 30
+EXPOSE 40
 
-CMD ["uvicorn", "origination.src.main:app", "--host", "0.0.0.0", "--port", "30"]
+CMD ["uvicorn", "origination.src.main:app", "--host", "0.0.0.0", "--port", "40"]

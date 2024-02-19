@@ -41,11 +41,11 @@ async def get_all_products(session: AsyncSession = Depends(get_session)) -> list
 
 @app.get(
     '/product/{code}',
-    response_model=ProductBaseDto,
+    response_model=ProductDto,
     response_class=JsonBeautify,
     summary='Get the specified product'
 )
-async def get_product(code: str, session: AsyncSession = Depends(get_session)) -> ProductBaseDto:
+async def get_product(code: str, session: AsyncSession = Depends(get_session)) -> ProductDto:
     """
 
     :param code: Code of product to retrieve
@@ -83,7 +83,7 @@ async def set_product(
     If product is not available, then create new product.
     :param product_to_post: product to create
     :param session: The connection session with DB
-    :return: If product is not available, then return 200, otherwise raise error 409
+    :return: If product is not available, then return 200, otherwise raise error 409, 422
     """
     repository = GenericRepository(session, ProductDao)
     product: ProductDao = (await repository.get_one_by_params(['code'], [product_to_post.code]))
@@ -104,7 +104,7 @@ async def set_product(
             max_origination_amount=product_to_post.max_origination_amount
         )
     except SQLAlchemyError as ex:
-        raise HTTPException(status_code=409, detail=f'Неверные данные, {ex}!')
+        raise HTTPException(status_code=422, detail=f'Неверные данные, {ex}!')
 
     await repository.save(product_n)
     return Response(
@@ -191,7 +191,7 @@ async def application_request_create(
     return agreement_n.agreement_id
 
 
-@app.post('/application/{application_id}/close', summary='Clients request to cancel agreement')
+@app.post('/application/{agreement_id}/close', summary='Clients request to cancel agreement')
 async def application_request_cancel(
         agreement_id: int | UUID,
         session: AsyncSession = Depends(get_session)
