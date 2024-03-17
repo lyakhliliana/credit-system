@@ -43,7 +43,7 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="status" type="VARCHAR" remarks="Статус договора">
+            <column name="status" type="VARCHAR(30)" remarks="Статус договора">
                 <constraints nullable="false"/>
             </column>
 

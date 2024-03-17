@@ -1,40 +1,87 @@
 from typing import Sequence
 from uuid import UUID
 
-from fastapi import Depends, FastAPI, HTTPException
+import httpx
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from contextlib import asynccontextmanager
+
+from fastapi import Depends, FastAPI, HTTPException, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.generic_repository import GenericRepository
-from database.http_output import JsonBeautify
+from utils.http_output import JsonBeautify
 from origination.src.models.dao import AgreementDao
 from origination.src.models.dto import AgreementDto, AgreementCreateDto
-from origination.src.models.session_maker import get_session
+from origination.src.models.session_maker import get_session, async_session
+from utils.scoring_status import Status
+
+scheduler = AsyncIOScheduler()
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    scheduler.start()
+    scheduler.add_job(refresh_agreements, 'interval', seconds=15)
+    yield
+    scheduler.shutdown()
+
+
+host = 'http://172.29.176.1'
+
+
+async def refresh_agreements():
+    async with async_session() as session:
+        async with session.begin():
+            repository = GenericRepository(session, AgreementDao)
+            agreements: Sequence[AgreementDao] = (
+                await repository.get_all_by_params_and(['status', ], [Status.NEW.value, ])
+            )
+            for agreement in agreements:
+                url = f"{host}:50/score_agreement"
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(url, json=agreement.convert_to_dto().model_dump())
+                    if response.status_code != 200:
+                        continue  # skip
+                    await repository.update_property(
+                        ['agreement_id'],
+                        [agreement.agreement_id],
+                        'status',
+                        Status.SCORING.value
+                    )
+
+    return Response(
+        status_code=200,
+        media_type='text/plain',
+        content='Agreement to score job done'
+    )
+
 
 app = FastAPI(
     title='Origination API',
     summary='Documentation of Fintech Credits API - Origination',
     description='There will be some description of Fintech API',
     version='1.0.0',
+    lifespan=lifespan
 )
 
 
 @app.get(
-    '/agreement/{id}',
+    '/agreement/{agreement_id}',
     response_model=AgreementDto,
     response_class=JsonBeautify,
     summary='Get the specified agreement'
 )
-async def get_agreement_by_id(id: int | UUID, session: AsyncSession = Depends(get_session)) -> AgreementDto:
+async def get_agreement_by_id(agreement_id: int | UUID, session: AsyncSession = Depends(get_session)) -> AgreementDto:
     """
-    :param id: id of agreement to retrieve
+    :param agreement_id: id of agreement to retrieve
     :param session: The connection session with DB
     :return: if agreement id is available, then retrieve product info, else Not Found
     """
     repository = GenericRepository(session, AgreementDao)
-    product: AgreementDao = (await repository.get_one_by_params(['agreement_id'], [id]))
-    if product is None:
+    agreement_dao: AgreementDao = (await repository.get_one_by_params(['agreement_id'], [agreement_id]))
+    if agreement_dao is None:
         raise HTTPException(status_code=404, detail='Not found')
-    return AgreementDto(id=product.id, status=product.status)
+    return AgreementDto(agreement_id=agreement_dao.agreement_id, status=agreement_dao.status)
 
 
 @app.get(
@@ -49,9 +96,13 @@ async def get_new_agreements(session: AsyncSession = Depends(get_session)) -> li
     :param session: The connection session with DB
     :return: List of Json represented agreements with status NEW
     """
-    agreements: Sequence[AgreementDto] = (
-        await GenericRepository(session, AgreementDto).get_all_by_params_and(["status", ], ["NEW", ]))
-    return [AgreementDto(id=agreement.id, status=agreement.status) for agreement in agreements]
+    agreements: Sequence[AgreementDao] = (await GenericRepository(session, AgreementDao).get_all_by_params_and(
+        ['status', ],
+        [Status.NEW.value, ]
+    ))
+    if len(agreements) == 0:
+        raise HTTPException(status_code=404, detail='Not found')
+    return [agreement.convert_to_dto() for agreement in agreements]
 
 
 @app.get(
@@ -66,10 +117,13 @@ async def get_scored_agreements(session: AsyncSession = Depends(get_session)) ->
     :param session: The connection session with DB
     :return: List of Json represented agreements with status REJECT and APPROVED
     """
-    agreements: Sequence[AgreementDto] = (
-        await GenericRepository(session, AgreementDto).get_all_by_params_or(["status", "status", ],
-                                                                            ["REJECT", "APPROVED", ]))
-    return [AgreementDto(id=agreement.id, status=agreement.status) for agreement in agreements]
+    agreements: Sequence[AgreementDao] = (await GenericRepository(session, AgreementDao).get_all_by_params_or(
+        ['status', 'status', ],
+        [Status.REJECTED.value, Status.APPROVED.value, ]
+    ))
+    if len(agreements) == 0:
+        raise HTTPException(status_code=404, detail='Not found')
+    return [agreement.convert_to_dto() for agreement in agreements]
 
 
 @app.post('/agreement',
@@ -87,14 +141,13 @@ async def add_agreement(
     :return: If agreement not in DB, create, then return agreement
     """
     repository = GenericRepository(session, AgreementDao)
-    agreement: AgreementDao = (await repository.get_one_by_params(['id'], [agreement_to_post.id]))
+    agreement: AgreementDao = (await repository.get_one_by_params(
+        ['agreement_id'],
+        [agreement_to_post.agreement_id]
+    ))
     if agreement:
-        return agreement
+        return agreement.convert_to_dto()
 
-    agreement_n = AgreementDto(id=agreement_to_post.id, status=agreement_to_post.status)
+    agreement_n = AgreementDao(agreement_id=agreement_to_post.agreement_id, status=Status.NEW.value)
     await repository.save(agreement_n)
-    return agreement_n
-
-# import uvicorn
-# if __name__ == "__main__":
-#     uvicorn.run("main:app", port=80, log_level="info")
+    return agreement_n.convert_to_dto()

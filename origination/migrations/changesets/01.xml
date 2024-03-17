@@ -14,7 +14,7 @@
                 <constraints nullable="false" primaryKey="true" primaryKeyName="agreement_id"/>
             </column>
 
-            <column name="status" type="VARCHAR" remarks="Статус проверки документа">
+            <column name="status" type="VARCHAR(30)" remarks="Статус проверки документа">
                 <constraints nullable="false"/>
             </column>
         </createTable>

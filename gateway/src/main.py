@@ -4,7 +4,7 @@ import httpx
 import requests
 from fastapi import FastAPI
 
-from database.http_output import JsonBeautify
+from utils.http_output import JsonBeautify
 from gateway.src.models.dto import ProductDto, ApplicationCreateDto
 
 app = FastAPI(
@@ -14,7 +14,7 @@ app = FastAPI(
     version='1.0.0'
 )
 
-host = "http://192.168.0.103"
+host = 'http://172.29.176.1'
 
 
 @app.get(
@@ -58,7 +58,7 @@ async def application_request_create(
     """
     url = f"{host}:30/application"
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=application_to_post.model_dump())
+        response = (await client.post(url, json=application_to_post.model_dump()))
     return response.json()
 
 
@@ -73,5 +73,5 @@ async def application_request_cancel(
     """
     url = f"{host}:30/application/{agreement_id}/close"
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=dict(agreement_id=agreement_id,))
+        response = (await client.post(url, json=dict(agreement_id=agreement_id, )))
     return response.status_code

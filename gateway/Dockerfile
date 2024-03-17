@@ -7,6 +7,6 @@ COPY .  gateway
 
 RUN pip install --no-cache-dir --upgrade -r gateway/requirements.txt
 
-EXPOSE 50
+EXPOSE 60
 
-CMD ["uvicorn", "gateway.src.main:app", "--host", "0.0.0.0", "--port", "50"]
+CMD ["uvicorn", "gateway.src.main:app", "--host", "0.0.0.0", "--port", "60"]

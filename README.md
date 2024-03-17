@@ -1,23 +1,14 @@
-```bash
-cd tools/database-dev
-```
+### Job между PE и Origination
+Напрямую нет взаимодействия между двумя сервисами, все происходит через него.  
+Что происходит? Он берет все договора в статусе NEW из PE и отправляет в Origination, дожидаясь OK, 
+после которого меняет статус на SCORING в PE.  
+Что может пойти не так?
+*  Запрос на post не дойдет -> в следующий интервал заново произойдет запрос
+*  Origination добавит у себя договор, но не дойдет OK обратно -> в следующий интервал заново произойдет запрос, но 
+Origination проверит если такой договор у него и отправит его данные в случае нахождения
 
-```bash
-docker compose up -d
-```
-
-```bash
-docker run --rm --network="fintech-network" -v D:/hse/pr/python_sem/hw_repos/hse-fault-tolerant-systems-python-2023-fintech-lyakhliliana/product_engine/migrations:/app liquibase/liquibase:4.19.0 --defaultsFile=/app/dev.properties update
-```
-
-```bash
-docker run --rm --network="fintech-network" -v D:/hse/pr/python_sem/hw_repos/hse-fault-tolerant-systems-python-2023-fintech-lyakhliliana/origination/migrations:/app liquibase/liquibase:4.19.0 --defaultsFile=/app/dev.properties update
-```
-
-```bash
-cd ../../
-```
-
-```bash
-docker compose up -d
-```
+### Job между Origination и Scoring
+Берет все договора в Origination и отправляет в Scoring заглушку, в случае обратного OK меняет статус на SCORING.  
+Что может пойти не так?
+*  Запрос на post не дойдет -> в следующий интервал заново произойдет запрос
+*  Не дойдет OK обратно -> в следующий интервал заново произойдет запрос

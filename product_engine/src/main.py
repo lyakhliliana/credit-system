@@ -1,25 +1,74 @@
 import random
+from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Sequence
 from uuid import UUID
 
+import httpx
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import Depends, FastAPI, HTTPException, Response
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.generic_repository import GenericRepository
-from database.http_output import JsonBeautify
+from utils.http_output import JsonBeautify
 from product_engine.src.models.dao import ProductDao, PersonDao, AgreementDao
-from product_engine.src.models.session_maker import get_session
-from product_engine.src.models.dto import ProductBaseDto, ProductCreateDto, ApplicationCreateDto, AgreementDto, \
+from product_engine.src.models.session_maker import get_session, async_session
+from product_engine.src.models.dto import ProductCreateDto, ApplicationCreateDto, AgreementDto, \
     ProductDto
 from product_engine.src.utils.valid_transaction_check import check_valid_agreement_condition
+from utils.scoring_status import Status
+
+scheduler = AsyncIOScheduler()
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    scheduler.start()
+    scheduler.add_job(refresh_agreements, 'interval', seconds=15)
+    yield
+    scheduler.shutdown()
+
+
+host = 'http://172.29.176.1'
+
+
+async def refresh_agreements():
+    async with async_session() as session:
+        async with session.begin():
+            repository = GenericRepository(session, AgreementDao)
+            agreements: Sequence[AgreementDao] = (
+                await repository.get_all_by_params_and(['status', ], [Status.NEW.value, ])
+            )
+            for agreement in agreements:
+                url = f"{host}:40/agreement"
+                async with httpx.AsyncClient() as client:
+                    response = (
+                        await client.post(url, json=agreement.convert_to_dto().model_dump(
+                            include=['agreement_id']
+                        ))
+                    )
+                if response.status_code != 200:
+                    continue  # skip
+                await repository.update_property(
+                    ['agreement_id'],
+                    [agreement.agreement_id],
+                    'status',
+                    Status.SCORING.value
+                )
+    return Response(
+        status_code=200,
+        media_type='text/plain',
+        content='Agreement send to origination'
+    )
+
 
 app = FastAPI(
     title='PE API',
     summary='Documentation of Fintech Credits API',
     description='There will be some description of Fintech API',
     version='1.0.0',
+    lifespan=lifespan
 )
 
 
@@ -70,7 +119,11 @@ async def get_new_agreements(session: AsyncSession = Depends(get_session)) -> li
     :return: list of agreements with status NEW
     """
     agreements: AgreementDao = (
-        await GenericRepository(session, AgreementDao).get_all_by_params_and(['status'], ['NEW']))
+        await GenericRepository(session, AgreementDao).get_all_by_params_and(
+            ['status'],
+            [Status.NEW.value]
+        )
+    )
     return [agreement.convert_to_dto() for agreement in agreements]
 
 
@@ -125,19 +178,23 @@ async def application_request_create(
     :return: Agreement id, otherwise 400, 409
     """
     repository_product = GenericRepository(session, ProductDao)
-    product: ProductDao = (await repository_product.get_one_by_params(['code'], [application_to_post.product_code]))
+    product: ProductDao = (await repository_product.get_one_by_params(
+        ['code'],
+        [application_to_post.product_code]
+    ))
+
     if product is None:
-        raise HTTPException(status_code=400, detail="Продукт с таким кодом не существует")
+        raise HTTPException(status_code=400, detail='Продукт с таким кодом не существует')
 
     repository_person = GenericRepository(session, PersonDao)
-    person: PersonDao = (
-        await repository_person.get_one_by_params(
-            ['first_nm', 'last_nm', 'middle_nm', 'birth_dt', 'passport_no', 'email'],
-            [application_to_post.first_name, application_to_post.second_name,
-             application_to_post.third_name,
-             datetime.strptime(application_to_post.birthday, '%d.%m.%Y'),
-             application_to_post.passport_number,
-             application_to_post.email]))
+    person: PersonDao = (await repository_person.get_one_by_params(
+        ['first_nm', 'last_nm', 'middle_nm', 'birth_dt', 'passport_no', 'email'],
+        [application_to_post.first_name, application_to_post.second_name,
+         application_to_post.third_name,
+         datetime.strptime(application_to_post.birthday, '%d.%m.%Y'),
+         application_to_post.passport_number,
+         application_to_post.email]
+    ))
     if person:
         person_n = person
     else:
@@ -181,11 +238,11 @@ async def application_request_create(
         interest=application_to_post.interest,
         origination_amount=origination_amt,
         agreement_dttm=datetime.now(),
-        status="NEW"
+        status=Status.NEW.value
     )
 
     if not check_valid_agreement_condition(product=product, agreement=agreement_n):
-        raise HTTPException(status_code=400, detail="Данные договора не соответствуют продукту")
+        raise HTTPException(status_code=400, detail='Данные договора не соответствуют продукту')
 
     await repository_agreement.save(agreement_n)
     return agreement_n.agreement_id
@@ -199,13 +256,13 @@ async def application_request_cancel(
     repository = GenericRepository(session, AgreementDao)
     agreement: AgreementDao = (await repository.get_one_by_params(['agreement_id'], [agreement_id]))
     if agreement is None:
-        raise HTTPException(status_code=404, detail="Заявка с указанным ID не существует")
+        raise HTTPException(status_code=404, detail='Заявка с указанным ID не существует')
 
     await repository.update_property(
         ['agreement_id'],
         [agreement.agreement_id],
         'status',
-        'CLOSED'
+        Status.CLOSED.value
     )
 
     return Response(
@@ -232,6 +289,3 @@ async def delete_product(code: str, session: AsyncSession = Depends(get_session)
         media_type='text/plain',
         content='Продукт с указанным кодом был успешно удален!'
     )
-
-# if __name__ == "__main__":
-#     uvicorn.run("main:app", port=80, log_level="info")

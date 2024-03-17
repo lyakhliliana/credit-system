@@ -6,6 +6,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./database:/product_engine/database
+      - ./utils:/product_engine/utils
     networks:
       - fintech-network
     ports:
@@ -17,10 +18,23 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./database:/origination/database
+      - ./utils:/origination/utils
     networks:
       - fintech-network
     ports:
       - "40:40"
+    restart: unless-stopped
+  scoring-api:
+    build:
+      context: scoring
+      dockerfile: Dockerfile
+    volumes:
+      - ./database:/scoring/database
+      - ./utils:/scoring/utils
+    networks:
+      - fintech-network
+    ports:
+      - "50:50"
     restart: unless-stopped
   gateway-api:
     build:
@@ -28,10 +42,11 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./database:/gateway/database
+      - ./utils:/gateway/utils
     networks:
       - fintech-network
     ports:
-      - "50:50"
+      - "60:60"
     restart: unless-stopped
 networks:
   fintech-network:
