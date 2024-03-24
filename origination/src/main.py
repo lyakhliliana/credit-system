@@ -1,5 +1,4 @@
 from typing import Sequence
-from uuid import UUID
 
 import httpx
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -8,12 +7,11 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, HTTPException, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.generic_repository import GenericRepository
-from utils.http_output import JsonBeautify
+from common.generic_repository import GenericRepository
 from origination.src.models.dao import AgreementDao
 from origination.src.models.dto import AgreementDto, AgreementCreateDto
 from origination.src.models.session_maker import get_session, async_session
-from utils.scoring_status import Status
+from common.scoring_status import Status
 
 scheduler = AsyncIOScheduler()
 
@@ -68,10 +66,9 @@ app = FastAPI(
 @app.get(
     '/agreement/{agreement_id}',
     response_model=AgreementDto,
-    response_class=JsonBeautify,
     summary='Get the specified agreement'
 )
-async def get_agreement_by_id(agreement_id: int | UUID, session: AsyncSession = Depends(get_session)) -> AgreementDto:
+async def get_agreement_by_id(agreement_id: int, session: AsyncSession = Depends(get_session)) -> AgreementDto:
     """
     :param agreement_id: id of agreement to retrieve
     :param session: The connection session with DB
@@ -87,7 +84,6 @@ async def get_agreement_by_id(agreement_id: int | UUID, session: AsyncSession = 
 @app.get(
     '/new_agreements',
     response_model=list[AgreementDto],
-    response_class=JsonBeautify,
     summary='Get list of new agreements'
 )
 async def get_new_agreements(session: AsyncSession = Depends(get_session)) -> list[AgreementDto]:
@@ -108,7 +104,6 @@ async def get_new_agreements(session: AsyncSession = Depends(get_session)) -> li
 @app.get(
     '/scored_agreements',
     response_model=list[AgreementDto],
-    response_class=JsonBeautify,
     summary='Get list of scored agreements'
 )
 async def get_scored_agreements(session: AsyncSession = Depends(get_session)) -> list[AgreementDto]:
@@ -128,7 +123,6 @@ async def get_scored_agreements(session: AsyncSession = Depends(get_session)) ->
 
 @app.post('/agreement',
           response_model=AgreementDto,
-          response_class=JsonBeautify,
           summary='Add new agreement')
 async def add_agreement(
         agreement_to_post: AgreementCreateDto,

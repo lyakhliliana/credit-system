@@ -1,8 +1,8 @@
 from typing import Sequence, TypeVar, Generic
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete, update
+from sqlalchemy import select, delete, update, ColumnElement
 
-from database.base_orm_model import BaseOrmModel
+from common.base_orm_model import BaseOrmModel
 
 T = TypeVar("T", bound=BaseOrmModel)
 
@@ -13,7 +13,7 @@ class GenericRepository(Generic[T]):
         self.__session: AsyncSession = session
 
     async def get_all_by_params_and(self, columns: list, values: list) -> Sequence[T]:
-        f = self.__entity.__table__.columns[columns[0]] == values[0]
+        f: ColumnElement[bool] = self.__entity.__table__.columns[columns[0]] == values[0]
         for i in range(1, len(values)):
             f &= self.__entity.__table__.columns[columns[i]] == values[i]
         return (await self.__session.execute(select(self.__entity).where(f))).unique().scalars().all()
@@ -24,7 +24,7 @@ class GenericRepository(Generic[T]):
             f |= self.__entity.__table__.columns[columns[i]] == values[i]
         return (await self.__session.execute(select(self.__entity).where(f))).unique().scalars().all()
 
-    async def get_one_by_params(self, columns: list, values: list) -> Sequence[T]:
+    async def get_one_by_params(self, columns: list, values: list) -> T:
         f = self.__entity.__table__.columns[columns[0]] == values[0]
         for i in range(1, len(values)):
             f &= self.__entity.__table__.columns[columns[i]] == values[i]

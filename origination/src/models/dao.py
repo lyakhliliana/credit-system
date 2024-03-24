@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String
 
-from database.base_orm_model import BaseOrmModel
+from common.base_orm_model import BaseOrmModel
 from origination.src.models.dto import AgreementDto
 
 

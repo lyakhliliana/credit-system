@@ -1,10 +1,6 @@
-from uuid import UUID
-
 import httpx
-import requests
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
-from utils.http_output import JsonBeautify
 from gateway.src.models.dto import ProductDto, ApplicationCreateDto
 
 app = FastAPI(
@@ -19,7 +15,6 @@ host = 'http://172.29.176.1'
 
 @app.get(
     '/product',
-    response_class=JsonBeautify,
     summary='Get list of available products'
 )
 async def get_all_products():
@@ -28,13 +23,17 @@ async def get_all_products():
     :return: List of Json represented products
     """
     url = f"{host}:30/product"
-    return requests.get(url).json()
+    async with httpx.AsyncClient() as client:
+        response = (await client.get(url))
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise HTTPException(status_code=response.status_code, detail=response.json())
 
 
 @app.get(
     '/product/{code}',
     response_model=ProductDto,
-    response_class=JsonBeautify,
     summary='Get the specified product'
 )
 async def get_product(code: str) -> ProductDto:
@@ -44,13 +43,16 @@ async def get_product(code: str) -> ProductDto:
     :return: if product code is available, then retrieve product info, else Not Found
     """
     url = f"{host}:30/product/{code}"
-    return requests.get(url, params=dict(code=code, )).json()
+    async with httpx.AsyncClient() as client:
+        response = (await client.get(url))
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise HTTPException(status_code=response.status_code, detail=response.json())
 
 
 @app.post('/application', summary='Clients request to create agreement')
-async def application_request_create(
-        application_to_post: ApplicationCreateDto
-):
+async def application_request_create(application_to_post: ApplicationCreateDto):
     """
     Create new agreement of person.
     :param application_to_post: agreement data
@@ -59,13 +61,14 @@ async def application_request_create(
     url = f"{host}:30/application"
     async with httpx.AsyncClient() as client:
         response = (await client.post(url, json=application_to_post.model_dump()))
-    return response.json()
+        if response.is_success:
+            return response.json()
+        else:
+            raise HTTPException(status_code=response.status_code, detail=response.json())
 
 
 @app.post('/application/{agreement_id}/close', summary='Clients request to cancel agreement')
-async def application_request_cancel(
-        agreement_id: int | UUID
-):
+async def application_request_cancel(agreement_id: int):
     """
         Close the agreement of person.
         :param agreement_id: agreement data
@@ -74,4 +77,7 @@ async def application_request_cancel(
     url = f"{host}:30/application/{agreement_id}/close"
     async with httpx.AsyncClient() as client:
         response = (await client.post(url, json=dict(agreement_id=agreement_id, )))
-    return response.status_code
+        if response.is_success:
+            return response.json()
+        else:
+            raise HTTPException(status_code=response.status_code, detail=response.json())

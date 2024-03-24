@@ -1,7 +1,7 @@
 from sqlalchemy import Integer, String, Column, DateTime, ForeignKey, Numeric, Date
 from sqlalchemy.orm import relationship
 
-from database.base_orm_model import BaseOrmModel
+from common.base_orm_model import BaseOrmModel
 from product_engine.src.models.dto import ProductDto, AgreementDto
 
 

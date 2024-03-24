@@ -5,8 +5,7 @@ services:
       context: product_engine
       dockerfile: Dockerfile
     volumes:
-      - ./database:/product_engine/database
-      - ./utils:/product_engine/utils
+      - ./common:/product_engine/common
     networks:
       - fintech-network
     ports:
@@ -17,8 +16,7 @@ services:
       context: origination
       dockerfile: Dockerfile
     volumes:
-      - ./database:/origination/database
-      - ./utils:/origination/utils
+      - ./common:/origination/common
     networks:
       - fintech-network
     ports:
@@ -29,8 +27,7 @@ services:
       context: scoring
       dockerfile: Dockerfile
     volumes:
-      - ./database:/scoring/database
-      - ./utils:/scoring/utils
+      - ./common:/scoring/common
     networks:
       - fintech-network
     ports:
@@ -41,8 +38,7 @@ services:
       context: gateway
       dockerfile: Dockerfile
     volumes:
-      - ./database:/gateway/database
-      - ./utils:/gateway/utils
+      - ./common:/gateway/common
     networks:
       - fintech-network
     ports:

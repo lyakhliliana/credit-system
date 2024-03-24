@@ -2,7 +2,6 @@ import random
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Sequence
-from uuid import UUID
 
 import httpx
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -10,14 +9,13 @@ from fastapi import Depends, FastAPI, HTTPException, Response
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.generic_repository import GenericRepository
-from utils.http_output import JsonBeautify
+from common.generic_repository import GenericRepository
 from product_engine.src.models.dao import ProductDao, PersonDao, AgreementDao
 from product_engine.src.models.session_maker import get_session, async_session
 from product_engine.src.models.dto import ProductCreateDto, ApplicationCreateDto, AgreementDto, \
     ProductDto
 from product_engine.src.utils.valid_transaction_check import check_valid_agreement_condition
-from utils.scoring_status import Status
+from common.scoring_status import Status
 
 scheduler = AsyncIOScheduler()
 
@@ -45,7 +43,7 @@ async def refresh_agreements():
                 async with httpx.AsyncClient() as client:
                     response = (
                         await client.post(url, json=agreement.convert_to_dto().model_dump(
-                            include=['agreement_id']
+                            include={'agreement_id'}
                         ))
                     )
                 if response.status_code != 200:
@@ -75,7 +73,6 @@ app = FastAPI(
 @app.get(
     '/product',
     response_model=list[ProductDto],
-    response_class=JsonBeautify,
     summary='Get list of available products'
 )
 async def get_all_products(session: AsyncSession = Depends(get_session)) -> list[ProductDto]:
@@ -91,7 +88,6 @@ async def get_all_products(session: AsyncSession = Depends(get_session)) -> list
 @app.get(
     '/product/{code}',
     response_model=ProductDto,
-    response_class=JsonBeautify,
     summary='Get the specified product'
 )
 async def get_product(code: str, session: AsyncSession = Depends(get_session)) -> ProductDto:
@@ -110,7 +106,6 @@ async def get_product(code: str, session: AsyncSession = Depends(get_session)) -
 @app.get(
     '/new_agreements/',
     response_model=list[AgreementDto],
-    response_class=JsonBeautify,
     summary='Get the agreements with status NEW'
 )
 async def get_new_agreements(session: AsyncSession = Depends(get_session)) -> list[AgreementDto]:
@@ -118,7 +113,7 @@ async def get_new_agreements(session: AsyncSession = Depends(get_session)) -> li
     :param session: The connection session with DB
     :return: list of agreements with status NEW
     """
-    agreements: AgreementDao = (
+    agreements: Sequence[AgreementDao] = (
         await GenericRepository(session, AgreementDao).get_all_by_params_and(
             ['status'],
             [Status.NEW.value]
@@ -249,11 +244,8 @@ async def application_request_create(
 
 
 @app.post('/application/{agreement_id}/close', summary='Clients request to cancel agreement')
-async def application_request_cancel(
-        agreement_id: int | UUID,
-        session: AsyncSession = Depends(get_session)
-):
-    repository = GenericRepository(session, AgreementDao)
+async def application_request_cancel(agreement_id: int, session: AsyncSession = Depends(get_session)):
+    repository = GenericRepository(session, AgreementDao())
     agreement: AgreementDao = (await repository.get_one_by_params(['agreement_id'], [agreement_id]))
     if agreement is None:
         raise HTTPException(status_code=404, detail='Заявка с указанным ID не существует')
