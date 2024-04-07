@@ -1,0 +1,58 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+        http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd">
+
+    <changeSet author="l.lyakh" id="create-person-table">
+        <createTable tableName="person" remarks="Таблица с данными клиентов">
+            <column autoIncrement="true" name="person_id" type="INTEGER">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="person_id"/>
+            </column>
+
+            <column name="first_nm" type="VARCHAR" remarks="Фамилия клиента">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="last_nm" type="VARCHAR" remarks="Имя клиента">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="middle_nm" type="VARCHAR" remarks="Отчество клиента">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="birth_dt" type="DATE" remarks="Дата рождения клиента">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="passport_no" type="VARCHAR" remarks="Серия и номер паспорта">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="email" type="VARCHAR" remarks="Почта">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="mobile_phone_no" type="VARCHAR" remarks="Мобильный номер клиента">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="monthly_income_amt" type="INTEGER" remarks="Месячный доход клиента">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="l.lyakh" id="create_index_on_person">
+        <createIndex indexName="idx_passport_no_on_person" tableName="person">
+            <column name="passport_no"/>
+        </createIndex>
+    </changeSet>
+
+
+</databaseChangeLog>
