@@ -7,6 +7,6 @@ COPY .  product_engine
 
 RUN pip install --no-cache-dir --upgrade -r product_engine/requirements.txt
 
-EXPOSE 30
+EXPOSE $PRODUCT_ENGINE_PORT
 
 CMD ["uvicorn", "product_engine.src.main:app", "--host", "0.0.0.0", "--port", "30"]
