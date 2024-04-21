@@ -7,8 +7,8 @@ from gateway.src.models.dto import ProductDto
 
 product_router = APIRouter(prefix='/product')
 
-host = os.getenv('INTERNAL_HOST')
-pe_port = os.getenv('PRODUCT_ENGINE_PORT')
+host = os.getenv('PRODUCT_ENGINE_HOST')
+port = os.getenv('PRODUCT_ENGINE_PORT')
 
 
 @product_router.get(
@@ -20,7 +20,7 @@ async def get_all_products():
     Retrieve all products.
     :return: List of Json represented products
     """
-    url = f'{host}:{pe_port}/product'
+    url = f'{host}:{port}/product'
     async with httpx.AsyncClient() as client:
         response = (await client.get(url))
         if response.status_code == 200:
@@ -40,7 +40,7 @@ async def get_product(code: str) -> ProductDto:
     :param code: Code of product to retrieve
     :return: if product code is available, then retrieve product info, else Not Found
     """
-    url = f'{host}:{pe_port}/product/{code}'
+    url = f'{host}:{port}/product/{code}'
     async with httpx.AsyncClient() as client:
         response = (await client.get(url))
         if response.status_code == 200:

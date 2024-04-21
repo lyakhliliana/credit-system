@@ -29,3 +29,23 @@ async def get_new_agreements(session: AsyncSession = Depends(get_session)) -> li
         )
     )
     return [agreement.convert_to_dto() for agreement in agreements]
+
+
+@agreement_router.get(
+    '/{person_id}',
+    response_model=list[AgreementDto],
+    summary='Get the agreements of person'
+)
+async def get_new_agreements(person_id: int, session: AsyncSession = Depends(get_session)) -> list[AgreementDto]:
+    """
+    :param person_id: id of person
+    :param session: The connection session with DB
+    :return: list of agreements
+    """
+    agreements: Sequence[AgreementDao] = (
+        await GenericRepository(session, AgreementDao).get_all_by_params_and(
+            ['person_id'],
+            [person_id]
+        )
+    )
+    return [agreement.convert_to_dto() for agreement in agreements]
