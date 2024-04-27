@@ -2,7 +2,7 @@ from sqlalchemy import Integer, String, Column, DateTime, ForeignKey, Numeric, D
 from sqlalchemy.orm import relationship
 
 from common.base_orm_model import BaseOrmModel
-from product_engine.src.models.dto import ProductDto, AgreementDto
+from product_engine.src.models.dto import ProductDto, AgreementDto, PaymentDto
 
 
 class ProductDao(BaseOrmModel):
@@ -84,10 +84,21 @@ class PaymentDao(BaseOrmModel):
     payment_id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     agreement_id = Column(Integer, ForeignKey('agreement.agreement_id'), index=True, nullable=False)
     payment_dt = Column(Date, nullable=False)
-    payment_period_start = Column(Date, nullable=False)
-    payment_period_end = Column(Date, nullable=False)
+    # payment_period_start = Column(Date, nullable=False)
+    # payment_period_end = Column(Date, nullable=False)
     payment_amt_debt = Column(Numeric, nullable=False)
     payment_amt_proc = Column(Numeric, nullable=False)
     serial_nmb_payment = Column(Integer, nullable=False)
     status = Column(String(30), nullable=False)
     agreement = relationship('AgreementDao', back_populates='schedule_payment')
+
+    def convert_to_dto(self) -> PaymentDto:
+        return PaymentDto(
+            payment_id=self.payment_id,
+            agreement_id=self.agreement_id,
+            payment_dt=self.payment_dt,
+            payment_amt_debt=self.payment_amt_debt,
+            payment_amt_proc=self.payment_amt_proc,
+            serial_nmb_payment=self.serial_nmb_payment,
+            status=self.status
+        )

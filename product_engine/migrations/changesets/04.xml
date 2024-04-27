@@ -22,13 +22,13 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="payment_period_start" type="DATE" remarks="Дата начала периода платежа">
-                <constraints nullable="false"/>
-            </column>
+<!--            <column name="payment_period_start" type="DATE" remarks="Дата начала периода платежа">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
 
-            <column name="payment_period_end" type="DATE" remarks="Дата конца периода платежа">
-                <constraints nullable="false"/>
-            </column>
+<!--            <column name="payment_period_end" type="DATE" remarks="Дата конца периода платежа">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
 
             <column name="payment_amt_debt" type="NUMERIC" remarks="Сумма фактического платежа">
                 <constraints nullable="false"/>

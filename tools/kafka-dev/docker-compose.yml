@@ -57,6 +57,6 @@ services:
       kafka-topics --bootstrap-server fintech-kafka:29092 --list
       "
 
-networks:
-  fintech-network:
-    name: "fintech-network"
+#networks:
+#  fintech-network:
+#    name: "fintech-network"

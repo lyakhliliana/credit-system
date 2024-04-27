@@ -6,7 +6,7 @@ import httpx
 from fastapi import HTTPException
 
 from common.kafka_managers.producer import send_message
-from common.scoring_status import Status
+from common.status import AgreementStatus
 from scoring.src.kafka.kafka_entites import kafka_producer_scoring_response
 from scoring.src.models.dto import AgreementDto
 
@@ -34,11 +34,11 @@ async def scoring_request(msg):
         )
         if agreement.agreement_id == request_info.agreement_id:
             continue
-        if agreement.status != Status.CLOSED.value:
+        if agreement.status != AgreementStatus.CLOSED.value:
             answer = False
             break
 
-    request_info.status = Status.APPROVED.value if answer else Status.REJECTED.value
+    request_info.status = AgreementStatus.APPROVED.value if answer else AgreementStatus.REJECTED.value
     logging.info('SCORING RESPONSE: RESULT %s', request_info.json())
     topic = os.getenv('TOPIC_NAME_SCORING_RESPONSES')
     async with kafka_producer_scoring_response.session() as session:
