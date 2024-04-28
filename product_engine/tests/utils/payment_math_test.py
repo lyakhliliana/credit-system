@@ -1,10 +1,14 @@
-import pytest
 import datetime
 
-from product_engine.src.utils.payment_math import calc_periods
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
+from src.utils.payment_math import calc_periods
 
 
-def first_parameters_test():
+def test_first_parameters():
     answer = {
         1: {'payment_amt_debt': -37073.47, 'payment_amt_proc': -10000.0, 'payment_dt': datetime.date(2024, 5, 27)},
         2: {'payment_amt_debt': -37444.21, 'payment_amt_proc': -9629.27, 'payment_dt': datetime.date(2024, 6, 26)},
@@ -39,7 +43,7 @@ def first_parameters_test():
         assert values["payment_dt"] == periods[i]["payment_dt"]
 
 
-def second_parameters_test():
+def test_second_parameters():
     answer = {1: {'payment_amt_debt': -957.27, 'payment_amt_proc': -750.0, 'payment_dt': datetime.date(2024, 5, 27)},
               2: {'payment_amt_debt': -1029.07, 'payment_amt_proc': -678.2, 'payment_dt': datetime.date(2024, 6, 26)},
               3: {'payment_amt_debt': -1106.25, 'payment_amt_proc': -601.02, 'payment_dt': datetime.date(2024, 7, 26)},
@@ -57,7 +61,7 @@ def second_parameters_test():
         assert values["payment_dt"] == periods[i]["payment_dt"]
 
 
-def third_parameters_test():
+def test_third_parameters():
     ans = {1: {'payment_amt_debt': -9928.56, 'payment_amt_proc': -9166.67, 'payment_dt': datetime.date(2024, 5, 27)},
            2: {'payment_amt_debt': -10110.58, 'payment_amt_proc': -8984.64, 'payment_dt': datetime.date(2024, 6, 26)},
            3: {'payment_amt_debt': -10295.94, 'payment_amt_proc': -8799.28, 'payment_dt': datetime.date(2024, 7, 26)},
@@ -101,8 +105,3 @@ def third_parameters_test():
         assert values["payment_amt_debt"] == periods[i]["payment_amt_debt"]
         assert values["payment_amt_proc"] == periods[i]["payment_amt_proc"]
         assert values["payment_dt"] == periods[i]["payment_dt"]
-
-
-first_parameters_test()
-second_parameters_test()
-third_parameters_test()
