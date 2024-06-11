@@ -21,10 +21,12 @@ application_router = APIRouter(prefix="/application")
 @application_router.post('', summary='Clients request to create agreement')
 async def application_request_create(
         application_to_post: ApplicationCreateDto,
-        session: AsyncSession = Depends(get_session)
+        session: AsyncSession = Depends(get_session),
+        kafka_producer: AgreementProducer = Depends(get_producer)
 ):
     """
     Create new agreement of person.
+    :param kafka_producer:
     :param application_to_post: agreement data
     :param session: The connection session with DB
     :return: Agreement id, otherwise 400, 409
@@ -97,6 +99,9 @@ async def application_request_create(
         raise HTTPException(status_code=400, detail='Данные договора не соответствуют продукту')
 
     await repository_agreement.save(agreement_n)
+
+    message = json.dumps(agreement_n.convert_to_dto().model_dump(include={'agreement_id'})).encode(encoding="utf-8")
+    await kafka_producer.send(message)
 
     return agreement_n.agreement_id
 

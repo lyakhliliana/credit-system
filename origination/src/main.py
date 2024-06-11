@@ -87,3 +87,19 @@ app = FastAPI(
 )
 
 app.include_router(agreement_router)
+
+event_loop = asyncio.get_event_loop()
+kafka = os.getenv('KAFKA_INSTANCE')
+produce_topic = os.getenv('TOPIC_NAME_AGREEMENTS')
+consumer = AIOKafkaConsumer(produce_topic, bootstrap_servers=kafka, loop=event_loop)
+
+
+async def consume():
+    await consumer.start()
+    try:
+        print("start")
+        while True:
+            async for msg in consumer:
+                print(msg)
+    finally:
+        await consumer.stop()
