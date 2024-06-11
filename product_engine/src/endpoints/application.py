@@ -1,3 +1,5 @@
+import json
+import os
 from datetime import datetime
 import random
 
@@ -10,6 +12,7 @@ from product_engine.src.models.dao import AgreementDao, PersonDao
 from product_engine.src.models.dao import ProductDao
 from product_engine.src.models.dto import ApplicationCreateDto
 from product_engine.src.models.session_maker import get_session
+from product_engine.src.utils.get_kafka_producer import AgreementProducer, get_producer
 from product_engine.src.utils.valid_transaction_check import check_valid_agreement_condition
 
 application_router = APIRouter(prefix="/application")
@@ -18,10 +21,12 @@ application_router = APIRouter(prefix="/application")
 @application_router.post('', summary='Clients request to create agreement')
 async def application_request_create(
         application_to_post: ApplicationCreateDto,
-        session: AsyncSession = Depends(get_session)
+        session: AsyncSession = Depends(get_session),
+        kafka_producer: AgreementProducer = Depends(get_producer)
 ):
     """
     Create new agreement of person.
+    :param kafka_producer:
     :param application_to_post: agreement data
     :param session: The connection session with DB
     :return: Agreement id, otherwise 400, 409
@@ -94,6 +99,10 @@ async def application_request_create(
         raise HTTPException(status_code=400, detail='Данные договора не соответствуют продукту')
 
     await repository_agreement.save(agreement_n)
+
+    message = json.dumps(agreement_n.convert_to_dto().model_dump(include={'agreement_id'})).encode(encoding="utf-8")
+    await kafka_producer.send(message)
+
     return agreement_n.agreement_id
 
 
