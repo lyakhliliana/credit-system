@@ -34,9 +34,9 @@ async def get_agreement_by_id(agreement_id: int, session: AsyncSession = Depends
                        response_model=AgreementDto,
                        summary='Add new agreement')
 async def add_agreement(
-        agreement_to_post: AgreementCreateDto,
-        session: AsyncSession = Depends(get_session)
-):
+    agreement_to_post: AgreementCreateDto,
+    session: AsyncSession = Depends(get_session)
+) -> AgreementDto:
     """
     If agreement is not available, then create agreement in origination with status NEW.
     :param agreement_to_post: agreement to add
@@ -51,7 +51,11 @@ async def add_agreement(
     if agreement:
         return agreement.convert_to_dto()
 
-    agreement_n = AgreementDao(agreement_id=agreement_to_post.agreement_id, status=Status.NEW.value)
+    agreement_n = AgreementDao(
+        agreement_id=agreement_to_post.agreement_id,
+        person_id=agreement_to_post.person_id,
+        status=Status.NEW.value
+    )
     await repository.save(agreement_n)
     return agreement_n.convert_to_dto()
 
@@ -94,3 +98,18 @@ async def get_scored_agreements(session: AsyncSession = Depends(get_session)) ->
     if len(agreements) == 0:
         raise HTTPException(status_code=404, detail='Not found')
     return [agreement.convert_to_dto() for agreement in agreements]
+
+
+@agreement_router.post('/{agreement_id}', summary='Update status by id')
+async def change_agreement_status(agreement_id: int, status: str, session: AsyncSession = Depends(get_session)):
+    repository = GenericRepository(session, AgreementDao)
+    agreement: AgreementDao = (await repository.get_one_by_params(['agreement_id'], [agreement_id]))
+    if agreement is None:
+        raise HTTPException(status_code=404, detail='Заявка с указанным ID не существует')
+
+    await repository.update_property(
+        ['agreement_id'],
+        [agreement.agreement_id],
+        'status',
+        status
+    )

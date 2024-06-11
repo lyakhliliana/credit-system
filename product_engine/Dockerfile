@@ -9,4 +9,4 @@ RUN pip install --no-cache-dir --upgrade -r product_engine/requirements.txt
 
 EXPOSE $PRODUCT_ENGINE_PORT
 
-CMD ["uvicorn", "product_engine.src.main:app", "--host", "0.0.0.0", "--port", "30"]
+CMD ["uvicorn", "product_engine.src.main:app", "--host", "0.0.0.0", "--port", "8130"]

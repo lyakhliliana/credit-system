@@ -17,6 +17,10 @@
             <column name="status" type="VARCHAR(30)" remarks="Статус проверки документа">
                 <constraints nullable="false"/>
             </column>
+
+            <column name="person_id" type="INTEGER" remarks="Код клиента">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
     </changeSet>
 

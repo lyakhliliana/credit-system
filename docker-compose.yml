@@ -1,6 +1,7 @@
 version: '3.8'
 services:
   product-engine-api:
+    container_name: "product-engine-api"
     build:
       context: product_engine
       dockerfile: Dockerfile
@@ -11,12 +12,13 @@ services:
     networks:
       - fintech-network
     ports:
-      - "30:30"
+      - "8130:8130"
     restart: unless-stopped
     depends_on:
       - postgresql
       - pgadmin
   origination-api:
+    container_name: "origination-api"
     build:
       context: origination
       dockerfile: Dockerfile
@@ -27,9 +29,10 @@ services:
     networks:
       - fintech-network
     ports:
-      - "40:40"
+      - "8140:8140"
     restart: unless-stopped
   scoring-api:
+    container_name: "scoring-api"
     build:
       context: scoring
       dockerfile: Dockerfile
@@ -40,12 +43,13 @@ services:
     networks:
       - fintech-network
     ports:
-      - "50:50"
+      - "8150:8150"
     restart: unless-stopped
     depends_on:
       - postgresql
       - pgadmin
   gateway-api:
+    container_name: "gateway-api"
     build:
       context: gateway
       dockerfile: Dockerfile
@@ -56,7 +60,7 @@ services:
     networks:
       - fintech-network
     ports:
-      - "60:60"
+      - "8160:8160"
     restart: unless-stopped
     depends_on:
       - postgresql
@@ -117,6 +121,7 @@ services:
     depends_on:
       - postgresql
       - pgadmin
+
 
 networks:
   fintech-network:

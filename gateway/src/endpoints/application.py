@@ -7,8 +7,8 @@ from gateway.src.models.dto import ApplicationCreateDto
 
 application_router = APIRouter(prefix='/application')
 
-host = os.getenv('INTERNAL_HOST')
-pe_port = os.getenv('PRODUCT_ENGINE_PORT')
+host = os.getenv('PRODUCT_ENGINE_PORT')
+port = os.getenv('PRODUCT_ENGINE_PORT')
 
 
 @application_router.post('', summary='Clients request to create agreement')
@@ -18,7 +18,7 @@ async def application_request_create(application_to_post: ApplicationCreateDto):
     :param application_to_post: agreement data
     :return: Agreement id, otherwise 400, 409
     """
-    url = f'{host}:{pe_port}/application'
+    url = f'{host}:{port}/application'
     async with httpx.AsyncClient() as client:
         response = (await client.post(url, json=application_to_post.model_dump()))
         if response.is_success:
@@ -34,7 +34,7 @@ async def application_request_cancel(agreement_id: int):
         :param agreement_id: agreement data
         :return: Agreement id, otherwise 400, 409
     """
-    url = f'{host}:{pe_port}/application/{agreement_id}/close'
+    url = f'{host}:{port}/application/{agreement_id}/close'
     async with httpx.AsyncClient() as client:
         response = (await client.post(url, json=dict(agreement_id=agreement_id, )))
         if response.is_success:

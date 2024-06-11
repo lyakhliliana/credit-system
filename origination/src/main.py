@@ -1,9 +1,9 @@
 import asyncio
+import logging
 from typing import Sequence
 import os
 import httpx
-from aiokafka import AIOKafkaConsumer
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+# from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Response
@@ -11,23 +11,43 @@ from fastapi import FastAPI, Response
 from common.scoring_status import Status
 from common.generic_repository import GenericRepository
 from origination.src.endpoints.agreement import agreement_router
+from origination.src.kafka.callback_functions import scoring_response_callback, create_application_callback
+from origination.src.kafka.kafka_entities import kafka_consumer_scoring_responses, kafka_producer_scoring_requests, \
+    kafka_consumer_new_agreements, event_loop
 from origination.src.models.dao import AgreementDao
 from origination.src.models.session_maker import async_session
 
-scheduler = AsyncIOScheduler()
+# scheduler = AsyncIOScheduler()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    scheduler.start()
-    scheduler.add_job(refresh_agreements, 'interval', seconds=15)
-    event_loop.create_task(consume())
+    topic = os.getenv('TOPIC_NAME_SCORING_RESPONSES')
+    await kafka_consumer_scoring_responses.init_consumer(topic, scoring_response_callback)
+    event_loop.create_task(kafka_consumer_scoring_responses.consume())
+
+    topic = os.getenv('TOPIC_NAME_AGREEMENTS')
+    await kafka_consumer_new_agreements.init_consumer(topic, create_application_callback)
+    event_loop.create_task(kafka_consumer_new_agreements.consume())
+
+    await kafka_producer_scoring_requests.init_producer()
+
+    # scheduler.start()
+    # scheduler.add_job(refresh_agreements, 'interval', seconds=15)
+
     yield
-    await consumer.stop()
-    scheduler.shutdown()
+    await kafka_consumer_scoring_responses.stop()
+    await kafka_producer_scoring_requests.stop()
+    await kafka_consumer_new_agreements.stop()
+    # scheduler.shutdown()
 
 
-host = os.getenv('INTERNAL_HOST')
+host = os.getenv('SCORING_HOST')
 port = os.getenv('SCORING_PORT')
 
 

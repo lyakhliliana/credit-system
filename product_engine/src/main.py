@@ -2,12 +2,13 @@ import os
 from contextlib import asynccontextmanager
 from typing import Sequence
 
-import httpx
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI, Response
 
+from common.kafka_managers.producer import send_message
 from common.scoring_status import Status
 from common.generic_repository import GenericRepository
+from product_engine.src.kafka.kafka_entites import kafka_producer_agreements
 from product_engine.src.endpoints.agreement import agreement_router
 from product_engine.src.endpoints.application import application_router
 from product_engine.src.endpoints.product import product_router
@@ -19,14 +20,14 @@ scheduler = AsyncIOScheduler()
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    await kafka_producer_agreements.init_producer()
+
     scheduler.start()
     scheduler.add_job(refresh_agreements, 'interval', seconds=15)
+
     yield
+    kafka_producer_agreements.stop()
     scheduler.shutdown()
-
-
-host = os.getenv('INTERNAL_HOST')
-port = os.getenv('ORIGINATION_PORT')
 
 
 async def refresh_agreements():
@@ -36,16 +37,15 @@ async def refresh_agreements():
             agreements: Sequence[AgreementDao] = (
                 await repository.get_all_by_params_and(['status', ], [Status.NEW.value, ])
             )
+            topic = os.getenv('TOPIC_NAME_AGREEMENTS')
             for agreement in agreements:
-                url = f'{host}:{port}/agreement'
-                async with httpx.AsyncClient() as client:
-                    response = (
-                        await client.post(url, json=agreement.convert_to_dto().model_dump(
-                            include={'agreement_id'}
-                        ))
+                async with kafka_producer_agreements.session() as session_kafka:
+                    await send_message(
+                        session_kafka,
+                        topic,
+                        agreement.convert_to_dto().model_dump(include={'agreement_id', 'person_id'})
                     )
-                if response.status_code != 200:
-                    continue  # skip
+
                 await repository.update_property(
                     ['agreement_id'],
                     [agreement.agreement_id],
