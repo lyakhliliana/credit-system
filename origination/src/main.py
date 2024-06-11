@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from typing import Sequence
 import os
@@ -8,7 +7,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Response
 
-from common.scoring_status import Status
+from common.status import AgreementStatus
 from common.generic_repository import GenericRepository
 from origination.src.endpoints.agreement import agreement_router
 from origination.src.kafka.callback_functions import scoring_response_callback, create_application_callback
@@ -56,7 +55,7 @@ async def refresh_agreements():
         async with session.begin():
             repository = GenericRepository(session, AgreementDao)
             agreements: Sequence[AgreementDao] = (
-                await repository.get_all_by_params_and(['status', ], [Status.NEW.value, ])
+                await repository.get_all_by_params_and(['status', ], [AgreementStatus.NEW.value, ])
             )
             for agreement in agreements:
                 url = f'{host}:{port}/score_agreement'
@@ -68,7 +67,7 @@ async def refresh_agreements():
                         ['agreement_id'],
                         [agreement.agreement_id],
                         'status',
-                        Status.SCORING.value
+                        AgreementStatus.SCORING.value
                     )
 
     return Response(

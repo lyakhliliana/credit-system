@@ -1,4 +1,10 @@
-version: '3.8'
+networks:
+  fintech-network:
+    name: "fintech-network"
+
+include:
+  - tools/kafka-dev/docker-compose.yml
+
 services:
   product-engine-api:
     container_name: "product-engine-api"
@@ -121,8 +127,3 @@ services:
     depends_on:
       - postgresql
       - pgadmin
-
-
-networks:
-  fintech-network:
-    name: "fintech-network"

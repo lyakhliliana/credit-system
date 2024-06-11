@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.generic_repository import GenericRepository
-from common.scoring_status import Status
+from common.status import AgreementStatus
 from origination.src.models.dao import AgreementDao
 from origination.src.models.dto import AgreementDto, AgreementCreateDto
 from origination.src.models.session_maker import get_session
@@ -54,7 +54,7 @@ async def add_agreement(
     agreement_n = AgreementDao(
         agreement_id=agreement_to_post.agreement_id,
         person_id=agreement_to_post.person_id,
-        status=Status.NEW.value
+        status=AgreementStatus.NEW.value
     )
     await repository.save(agreement_n)
     return agreement_n.convert_to_dto()
@@ -73,7 +73,7 @@ async def get_new_agreements(session: AsyncSession = Depends(get_session)) -> li
     """
     agreements: Sequence[AgreementDao] = (await GenericRepository(session, AgreementDao).get_all_by_params_and(
         ['status', ],
-        [Status.NEW.value, ]
+        [AgreementStatus.NEW.value, ]
     ))
     if len(agreements) == 0:
         raise HTTPException(status_code=404, detail='Not found')
@@ -93,7 +93,7 @@ async def get_scored_agreements(session: AsyncSession = Depends(get_session)) ->
     """
     agreements: Sequence[AgreementDao] = (await GenericRepository(session, AgreementDao).get_all_by_params_or(
         ['status', 'status', ],
-        [Status.REJECTED.value, Status.APPROVED.value, ]
+        [AgreementStatus.REJECTED.value, AgreementStatus.APPROVED.value, ]
     ))
     if len(agreements) == 0:
         raise HTTPException(status_code=404, detail='Not found')

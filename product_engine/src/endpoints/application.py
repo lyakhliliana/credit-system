@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.generic_repository import GenericRepository
-from common.scoring_status import Status
+from common.status import AgreementStatus
 from product_engine.src.models.dao import AgreementDao, PersonDao
 from product_engine.src.models.dao import ProductDao
 from product_engine.src.models.dto import ApplicationCreateDto
@@ -92,16 +92,13 @@ async def application_request_create(
         interest=application_to_post.interest,
         origination_amount=origination_amt,
         agreement_dttm=datetime.now(),
-        status=Status.NEW.value
+        status=AgreementStatus.NEW.value
     )
 
     if not check_valid_agreement_condition(product=product, agreement=agreement_n):
         raise HTTPException(status_code=400, detail='Данные договора не соответствуют продукту')
 
     await repository_agreement.save(agreement_n)
-
-    message = json.dumps(agreement_n.convert_to_dto().model_dump(include={'agreement_id'})).encode(encoding="utf-8")
-    await kafka_producer.send(message)
 
     return agreement_n.agreement_id
 
@@ -117,7 +114,7 @@ async def application_request_cancel(agreement_id: int, session: AsyncSession = 
         ['agreement_id'],
         [agreement.agreement_id],
         'status',
-        Status.CLOSED.value
+        AgreementStatus.CLOSED.value
     )
 
     return Response(

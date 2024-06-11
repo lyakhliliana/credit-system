@@ -68,6 +68,12 @@ class AgreementDto(AgreementBaseDto):
         orm_mode = True
 
 
+class KafkaAgreementDto(BaseModel):
+    person_id: int
+    agreement_id: int
+    status: str
+
+
 class ApplicationCreateDto(BaseModel):
     product_code: str
     first_name: str
@@ -115,8 +121,8 @@ class PaymentBaseDto(BaseModel):
     payment_id: int
     agreement_id: int
     payment_dt: date
-    payment_period_start: date  # should be str representing date
-    payment_period_end: date  # should be str representing date
+    # payment_period_start: date  # should be str representing date
+    # payment_period_end: date  # should be str representing date
     payment_amt_debt: float
     payment_amt_proc: float
     serial_nmb_payment: int

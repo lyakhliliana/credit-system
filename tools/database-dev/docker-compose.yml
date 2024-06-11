@@ -41,6 +41,26 @@ services:
     volumes:
       - ./configs/servers.json:/pgadmin4/servers.json:ro
       - ./configs/pgpass:/pgadmin4/pgpass:ro
+  liquibase-product-engine:
+    image: liquibase/liquibase:4.19
+    networks:
+      - fintech-network
+    volumes:
+      - ./product_engine/migrations:/app
+    command: [ "--defaultsFile=/app/dev.properties", "update" ]
+    depends_on:
+      - postgresql
+      - pgadmin
+  liquibase-origination:
+    image: liquibase/liquibase:4.19
+    networks:
+      - fintech-network
+    volumes:
+      - ./origination/migrations:/app
+    command: [ "--defaultsFile=/app/dev.properties", "update" ]
+    depends_on:
+      - postgresql
+      - pgadmin
 
 
 networks:

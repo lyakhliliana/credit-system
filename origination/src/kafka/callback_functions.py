@@ -6,7 +6,7 @@ import httpx
 from fastapi import HTTPException
 
 from common.kafka_managers.producer import send_message
-from common.scoring_status import Status
+from common.status import AgreementStatus
 from origination.src.kafka.kafka_entities import kafka_producer_scoring_requests
 from origination.src.models.dto import AgreementDto, AgreementCreateDto
 
@@ -31,10 +31,10 @@ async def scoring_response_callback(msg):
     result = AgreementDto(**json.loads(msg.value.decode('ascii')))
     logging.info('ORIGINATION: CALLBACK SCORING: RESULT: %s', result)
     logging.info('ORIGINATION: CALLBACK SCORING: TRYING TO POST')
-    if result.status == Status.APPROVED.value:
-        await _change_agreement_status(result.agreement_id, status_cd=Status.APPROVED.value)
+    if result.status == AgreementStatus.APPROVED.value:
+        await _change_agreement_status(result.agreement_id, status_cd=AgreementStatus.APPROVED.value)
     else:
-        await _change_agreement_status(result.agreement_id, status_cd=Status.CLOSED.value)
+        await _change_agreement_status(result.agreement_id, status_cd=AgreementStatus.CLOSED.value)
 
 
 async def create_application_callback(msg):
@@ -55,4 +55,4 @@ async def create_application_callback(msg):
         else:
             raise HTTPException(status_code=response.status_code, detail=response.json())
     logging.info('ORIGINATION: CALLBACK APPLICATION: TRYING TO POST')
-    await _change_agreement_status(tmp.agreement_id, status_cd=Status.SCORING.value)
+    await _change_agreement_status(tmp.agreement_id, status_cd=AgreementStatus.SCORING.value)
