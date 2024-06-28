@@ -41,9 +41,9 @@ async def find_overdue_payments():
                                                         agreement_id=agreement.agreement_id,
                                                         overdue_date=payment.payment_dt,
                                                         payment=payment.payment_amt_debt + payment.payment_amt_proc)
-                    await send_message(session_kafka, topic, kafka_payment.convert_to_dto().model_dump())
+                    await send_message(session_kafka, topic, kafka_payment.dict())
 
                 await repository_payment.update_property(['payment_id'], [payment.payment_id],
-                                                 'status', PaymentStatus.OVERDUE.value)
+                                                         'status', PaymentStatus.OVERDUE.value)
 
     return Response(status_code=200, media_type='text/plain', content='Payments checked for late')

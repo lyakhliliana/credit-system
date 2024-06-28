@@ -2,9 +2,11 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
 
 from origination.src.endpoints.agreement import agreement_router
+from origination.src.jobs.refresh_agreements import refresh_agreements
 from origination.src.kafka.kafka_entities import kafka_consumer_scoring_responses, kafka_producer_scoring_requests, \
     kafka_consumer_new_agreements, event_loop
 from origination.src.kafka.new_agreements_callback import new_agreement_callback
@@ -14,6 +16,8 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
+
+scheduler = AsyncIOScheduler()
 
 
 @asynccontextmanager
@@ -28,6 +32,9 @@ async def lifespan(_app: FastAPI):
     event_loop.create_task(kafka_consumer_new_agreements.consume())
 
     await kafka_producer_scoring_requests.init_producer()
+
+    scheduler.start()
+    scheduler.add_job(refresh_agreements, 'interval', seconds=3600*12)
 
     yield
 

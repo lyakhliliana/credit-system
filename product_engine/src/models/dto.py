@@ -121,8 +121,6 @@ class PaymentBaseDto(BaseModel):
     payment_id: int
     agreement_id: int
     payment_dt: date
-    # payment_period_start: date  # should be str representing date
-    # payment_period_end: date  # should be str representing date
     payment_amt_debt: float
     payment_amt_proc: float
     serial_nmb_payment: int
@@ -131,3 +129,16 @@ class PaymentBaseDto(BaseModel):
 
 class PaymentDto(PaymentBaseDto):
     payment_id: int
+
+
+class KafkaOverduePayment(BaseModel):
+    customer_id: int
+    agreement_id: int
+    overdue_date: date
+    payment: float
+
+
+class KafkaPaymentRecievedDto(BaseModel):
+    date: date
+    agreement_id: int
+    payment: float

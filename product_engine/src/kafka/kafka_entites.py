@@ -15,3 +15,5 @@ CONFIG_GROUP = {'bootstrap_servers': kafka,
 
 kafka_producer_agreements = KafkaProducerSession(CONFIG)
 kafka_consumer_scoring_responses = KafkaConsumer(CONFIG_GROUP)
+kafka_producer_overdue_payments = KafkaProducerSession(CONFIG)
+kafka_consumer_payment_recieved = KafkaConsumer(CONFIG)

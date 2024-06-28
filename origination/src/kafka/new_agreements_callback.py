@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 
 from common.kafka_managers.producer import send_message
@@ -15,7 +14,7 @@ topic_scoring_request = os.getenv('TOPIC_NAME_SCORING_REQUESTS')
 
 async def new_agreement_callback(msg):
     request_data = AgreementCreateDto(**json.loads(msg.value.decode('ascii')))
-    agreement: AgreementDto
+    agreement: AgreementDto = None
     async for session in get_session():
         agreement = await create_agreement_db(request_data, session)
 

@@ -98,7 +98,7 @@ async def delete_product(code: str, session: AsyncSession = Depends(get_session)
         raise HTTPException(status_code=404, detail='Not found')
 
     return Response(
-        status_code=204,
+        status_code=200,
         media_type='text/plain',
         content='Продукт с указанным кодом успешно удален!'
     )
