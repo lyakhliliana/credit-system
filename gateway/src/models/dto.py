@@ -1,3 +1,5 @@
+from datetime import datetime, date
+
 from pydantic import BaseModel
 
 
@@ -29,3 +31,25 @@ class ApplicationCreateDto(BaseModel):
     term: int
     interest: float
     disbursement_amount: float
+
+
+class AgreementDto(BaseModel):
+    agreement_id: int
+    product_code: str
+    person_id: int
+    load_term: int
+    principal_amount: float
+    interest: float
+    origination_amount: float
+    agreement_dttm: datetime
+    status: str
+
+
+class PaymentDto(BaseModel):
+    payment_id: int
+    agreement_id: int
+    payment_dt: date
+    payment_amt_debt: float
+    payment_amt_proc: float
+    serial_nmb_payment: int
+    status: str

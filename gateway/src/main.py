@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 
+from gateway.src.endpoints.agreement import agreement_router
 from gateway.src.endpoints.application import application_router
+from gateway.src.endpoints.payment import payment_router
 from gateway.src.endpoints.product import product_router
 
 app = FastAPI(
@@ -12,3 +14,5 @@ app = FastAPI(
 
 app.include_router(application_router)
 app.include_router(product_router)
+app.include_router(agreement_router)
+app.include_router(payment_router)

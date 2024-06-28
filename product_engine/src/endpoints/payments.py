@@ -40,7 +40,7 @@ async def create_payment(
 
 
 @payment_router.get(
-    '/{agreement_id}',
+    's/{agreement_id}',
     response_model=list[PaymentDto],
     summary='Get list of payments by id of agreement'
 )
