@@ -27,7 +27,6 @@ async def lifespan(_app: FastAPI):
     event_loop.create_task(kafka_consumer_scoring_responses.consume())
 
     topic = os.getenv('TOPIC_NAME_AGREEMENTS')
-    logging.info('TOPIC INIT: %s', topic)
     await kafka_consumer_new_agreements.init_consumer(topic, new_agreement_callback)
     event_loop.create_task(kafka_consumer_new_agreements.consume())
 
@@ -41,6 +40,7 @@ async def lifespan(_app: FastAPI):
     await kafka_consumer_scoring_responses.stop()
     await kafka_producer_scoring_requests.stop()
     await kafka_consumer_new_agreements.stop()
+    scheduler.shutdown()
 
 
 app = FastAPI(

@@ -34,22 +34,13 @@ async def application_processing(
         raise HTTPException(status_code=404, detail='Продукт с таким кодом не найден.')
 
     repository_person = GenericRepository(session, PersonDao)
-    # person: PersonDao = (await repository_person.get_one_by_condition(
-    #     (PersonDao.first_nm == application_to_post.first_name) &
-    #     (PersonDao.last_nm == application_to_post.second_name) &
-    #     (PersonDao.middle_nm == application_to_post.third_name) &
-    #     (PersonDao.birth_dt == datetime.strptime(application_to_post.birthday, '%d.%m.%Y') &
-    #      (PersonDao.passport_no == application_to_post.passport_number) &
-    #      (PersonDao.email == application_to_post.email))))
-
-    person: PersonDao = (await repository_person.get_one_by_params(
-        ['first_nm', 'last_nm', 'middle_nm', 'birth_dt', 'passport_no', 'email'],
-        [application_to_post.first_name, application_to_post.second_name,
-         application_to_post.third_name,
-         datetime.strptime(application_to_post.birthday, '%d.%m.%Y'),
-         application_to_post.passport_number,
-         application_to_post.email]
-    ))
+    person: PersonDao = (await repository_person.get_one_by_condition(
+        (PersonDao.first_nm == application_to_post.first_name) &
+        (PersonDao.last_nm == application_to_post.second_name) &
+        (PersonDao.middle_nm == application_to_post.third_name) &
+        (PersonDao.birth_dt == datetime.strptime(application_to_post.birthday, '%d.%m.%Y').date()) &
+        (PersonDao.passport_no == application_to_post.passport_number) &
+        (PersonDao.email == application_to_post.email)))
 
     current_person: PersonDao
     if not person:

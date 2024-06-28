@@ -3,9 +3,9 @@ import datetime
 import os
 import sys
 
-from product_engine.src.utils.payment_math import calc_periods
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+from product_engine.src.utils.payment_math import calc_periods
 
 
 def test_first_parameters():

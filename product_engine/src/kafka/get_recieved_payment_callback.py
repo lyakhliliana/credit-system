@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime
 
 from common.generic_repository import GenericRepository
@@ -24,10 +25,12 @@ async def get_recieved_payment(msg):
 
     if not payments:
         raise Exception("No future payments.")
+
     for payment in payments:
         payment = payment.convert_to_dto()
+        logging.info("---------------------------" + payment.__str__())
         if (datetime.strptime(request_info.date, '%Y-%m-%d').date() <= payment.payment_dt) and (
-            request_info.payment + payment.payment_amt_debt + payment.payment_amt_proc < 0.1):
+            request_info.payment + payment.payment_amt_debt + payment.payment_amt_proc < 0.5):
 
             async for session in get_session():
                 repository = GenericRepository(session, PaymentDao)
