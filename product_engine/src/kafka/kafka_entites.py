@@ -13,8 +13,9 @@ CONFIG_GROUP = {'bootstrap_servers': kafka,
                 'auto_commit_interval_ms': 10000,
                 'auto_offset_reset': "earliest"}
 
-kafka_producer_agreements = KafkaProducerSession(CONFIG)
 kafka_consumer_scoring_responses = KafkaConsumer(CONFIG_GROUP)
-kafka_producer_overdue_payments = KafkaProducerSession(CONFIG)
 kafka_consumer_payment_recieved = KafkaConsumer(CONFIG)
+
+kafka_producer_agreements = KafkaProducerSession(CONFIG)
+kafka_producer_overdue_payments = KafkaProducerSession(CONFIG)
 kafka_producer_payments = KafkaProducerSession(CONFIG)

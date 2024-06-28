@@ -12,18 +12,17 @@ from product_engine.src.models.dao import PaymentDao, AgreementDao
 from product_engine.src.models.dto import KafkaOverduePayment
 from product_engine.src.models.session_maker import get_session
 
+topic = os.getenv('TOPIC_NAME_OVERDUE_PAYMENTS')
+cur_date_str = os.getenv('TEST_DATE_OVERDUE_PAYMENTS', default=datetime.date.today().isoformat())
+cur_date = datetime.datetime.strptime(cur_date_str, '%Y-%m-%d')
+
 
 async def find_overdue_payments():
     payments: Sequence[PaymentDao] = None
     async for session in get_session():
         repository_payment = GenericRepository(session, PaymentDao)
         payments: Sequence[PaymentDao] = (
-            await repository_payment.get_all_by_params_and(['status', ], [PaymentStatus.FUTURE.value, ])
-        )
-
-    topic = os.getenv('TOPIC_NAME_OVERDUE_PAYMENTS')
-    cur_date_str = os.getenv('TEST_DATE_OVERDUE_PAYMENTS', default=datetime.date.today().isoformat())
-    cur_date = datetime.datetime.strptime(cur_date_str, '%Y-%m-%d')
+            await repository_payment.get_all_by_condition(PaymentDao.status == PaymentStatus.FUTURE.value))
 
     for payment in payments:
 
@@ -34,7 +33,7 @@ async def find_overdue_payments():
         async for session in get_session():
             repository_agreement = GenericRepository(session, AgreementDao)
             agreement: AgreementDao = (
-                await repository_agreement.get_one_by_params(['agreement_id', ], [payment.agreement_id])
+                await repository_agreement.get_one_by_condition((AgreementDao.agreement_id == payment.agreement_id))
             )
 
         async with kafka_producer_overdue_payments.session() as session_kafka:

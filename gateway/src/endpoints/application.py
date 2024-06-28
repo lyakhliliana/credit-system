@@ -38,6 +38,6 @@ async def application_request_cancel(agreement_id: int):
     async with httpx.AsyncClient() as client:
         response = (await client.post(url, json=dict(agreement_id=agreement_id, )))
         if response.is_success:
-            return response.json()
+            return response.text
         else:
             raise HTTPException(status_code=response.status_code, detail=response.json())

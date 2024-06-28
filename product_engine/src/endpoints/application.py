@@ -72,7 +72,7 @@ async def application_processing(
     origination_amt = random() * (float(product.max_origination_amount) - float(product.min_origination_amount))
     origination_amt += float(product.min_origination_amount)
 
-    agreement_n = AgreementDao(
+    new_agreement = AgreementDao(
         product_code=application_to_post.product_code,
         person_id=current_person.person_id,
         load_term=application_to_post.term,
@@ -83,12 +83,12 @@ async def application_processing(
         status=AgreementStatus.NEW.value
     )
 
-    if not check_valid_agreement_condition(product=product, agreement=agreement_n):
+    if not check_valid_agreement_condition(product=product, agreement=new_agreement):
         raise HTTPException(status_code=400, detail='Данные договора не соответствуют продукту.')
 
-    await repository_agreement.save(agreement_n)
+    await repository_agreement.save(new_agreement)
 
-    return agreement_n.agreement_id
+    return new_agreement.agreement_id
 
 
 @application_router.post('/{agreement_id}/close', summary='Clients request to cancel agreement')
