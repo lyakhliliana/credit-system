@@ -13,7 +13,7 @@ from product_engine.src.jobs.refresh_agreements import refresh_agreements
 from product_engine.src.kafka.get_recieved_payment_callback import get_recieved_payment
 from product_engine.src.kafka.make_payment_schedule_callback import make_payment_schedule
 from product_engine.src.kafka.kafka_entites import event_loop, kafka_producer_overdue_payments, \
-    kafka_consumer_payment_recieved
+    kafka_consumer_payment_recieved, kafka_producer_payments
 from product_engine.src.kafka.kafka_entites import kafka_producer_agreements, kafka_consumer_scoring_responses
 
 scheduler = AsyncIOScheduler()
@@ -23,6 +23,7 @@ scheduler = AsyncIOScheduler()
 async def lifespan(_app: FastAPI):
     await kafka_producer_agreements.init_producer()
     await kafka_producer_overdue_payments.init_producer()
+    await kafka_producer_payments.init_producer()
 
     topic = os.getenv('TOPIC_NAME_SCORING_RESPONSES')
     await kafka_consumer_scoring_responses.init_consumer(topic, make_payment_schedule)
@@ -39,6 +40,7 @@ async def lifespan(_app: FastAPI):
     yield
     kafka_producer_agreements.stop()
     kafka_producer_overdue_payments.stop()
+    kafka_producer_payments.stop()
     kafka_consumer_scoring_responses.stop()
     scheduler.shutdown()
 

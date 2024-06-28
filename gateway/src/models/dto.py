@@ -53,3 +53,9 @@ class PaymentDto(BaseModel):
     payment_amt_proc: float
     serial_nmb_payment: int
     status: str
+
+
+class PersonPaymentDto(BaseModel):
+    date: str
+    agreement_id: int
+    payment: float

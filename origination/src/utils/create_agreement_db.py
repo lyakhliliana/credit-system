@@ -9,7 +9,6 @@ from origination.src.models.dto import AgreementDto, AgreementCreateDto
 
 
 async def create_agreement_db(agreement_to_post: AgreementCreateDto, session: AsyncSession) -> AgreementDto:
-    logging.info("-----------------------------------------------------------")
     repository = GenericRepository(session, AgreementDao)
     agreement: AgreementDao = (await repository.get_one_by_condition(
         AgreementDao.agreement_id == agreement_to_post.agreement_id))

@@ -3,7 +3,7 @@ import os
 import httpx
 from fastapi import APIRouter, HTTPException
 
-from gateway.src.models.dto import PaymentDto
+from gateway.src.models.dto import PaymentDto, PersonPaymentDto
 
 payment_router = APIRouter(prefix='/payment')
 
@@ -26,5 +26,23 @@ async def get_payments(agreement_id: int) -> list[PaymentDto]:
         response = (await client.get(url))
         if response.status_code == 200:
             return response.json()
+        else:
+            raise HTTPException(status_code=response.status_code, detail=response.json())
+
+
+@payment_router.post(
+    '/pay',
+    summary='Make a payment'
+)
+async def make_payment(payment: PersonPaymentDto):
+    """
+        :param payment: date, agreement_id, value of payment
+        :return: Response
+        """
+    url = f'{host}:{port}/payment/pay'
+    async with httpx.AsyncClient() as client:
+        response = (await client.post(url, json=payment.model_dump()))
+        if response.status_code == 200:
+            return response.text
         else:
             raise HTTPException(status_code=response.status_code, detail=response.json())

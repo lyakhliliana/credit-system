@@ -1,6 +1,8 @@
 import json
+from datetime import datetime
 
 from common.generic_repository import GenericRepository
+from common.status import PaymentStatus
 from product_engine.src.models.dao import PaymentDao
 from product_engine.src.models.dto import KafkaPaymentRecievedDto, AgreementDto
 from product_engine.src.models.session_maker import get_session
@@ -16,5 +18,21 @@ async def get_recieved_payment(msg):
     payments: list[PaymentDao] = []
     async for session in get_session():
         repository = GenericRepository(session, PaymentDao)
-        payments: list[PaymentDao] = (await repository.get_one_by_condition(
-            (PaymentDao.agreement_id == agreement.agreement_id)))
+        payments = (await repository.get_all_by_condition(
+            (PaymentDao.agreement_id == agreement.agreement_id) & (PaymentDao.status == PaymentStatus.FUTURE.value)))
+    payments.sort(key=lambda x: x.serial_nmb_payment)
+
+    if not payments:
+        raise Exception("No future payments.")
+    for payment in payments:
+        payment = payment.convert_to_dto()
+        if (datetime.strptime(request_info.date, '%Y-%m-%d').date() <= payment.payment_dt) and (
+            request_info.payment + payment.payment_amt_debt + payment.payment_amt_proc < 0.1):
+
+            async for session in get_session():
+                repository = GenericRepository(session, PaymentDao)
+                await repository.update_property(
+                    ['payment_id'],
+                    [payment.payment_id],
+                    'status',
+                    PaymentStatus.PAID.value)

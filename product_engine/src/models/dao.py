@@ -84,8 +84,6 @@ class PaymentDao(BaseOrmModel):
     payment_id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     agreement_id = Column(Integer, ForeignKey('agreement.agreement_id'), index=True, nullable=False)
     payment_dt = Column(Date, nullable=False)
-    # payment_period_start = Column(Date, nullable=False)
-    # payment_period_end = Column(Date, nullable=False)
     payment_amt_debt = Column(Numeric, nullable=False)
     payment_amt_proc = Column(Numeric, nullable=False)
     serial_nmb_payment = Column(Integer, nullable=False)

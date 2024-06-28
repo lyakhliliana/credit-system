@@ -134,11 +134,17 @@ class PaymentDto(PaymentBaseDto):
 class KafkaOverduePayment(BaseModel):
     customer_id: int
     agreement_id: int
-    overdue_date: date
+    overdue_date: str
     payment: float
 
 
 class KafkaPaymentRecievedDto(BaseModel):
-    date: date
+    date: str
+    agreement_id: int
+    payment: float
+
+
+class PersonPaymentDto(BaseModel):
+    date: str
     agreement_id: int
     payment: float

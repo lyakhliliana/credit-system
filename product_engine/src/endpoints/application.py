@@ -120,5 +120,5 @@ async def application_request_cancel(agreement_id: int, session: AsyncSession = 
     return Response(
         status_code=200,
         media_type='text/plain',
-        content='Договор с указанным ID была успешно закрыт.'
+        content='Договор с указанным ID был успешно закрыт.'
     )
