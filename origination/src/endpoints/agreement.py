@@ -1,13 +1,13 @@
-from typing import Sequence
-
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.openapi.models import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.generic_repository import GenericRepository
-from common.status import AgreementStatus
 from origination.src.models.dao import AgreementDao
 from origination.src.models.dto import AgreementDto, AgreementCreateDto
 from origination.src.models.session_maker import get_session
+from origination.src.utils.change_agreement_status import change_agreement_status
+from origination.src.utils.create_agreement_db import create_agreement_db
 
 agreement_router = APIRouter(prefix='/agreement')
 
@@ -15,24 +15,24 @@ agreement_router = APIRouter(prefix='/agreement')
 @agreement_router.get(
     '/{agreement_id}',
     response_model=AgreementDto,
-    summary='Get the specified agreement'
+    summary='Get the specified agreement by id.'
 )
-async def get_agreement_by_id(agreement_id: int, session: AsyncSession = Depends(get_session)) -> AgreementDto:
+async def get_agreement(agreement_id: int, session: AsyncSession = Depends(get_session)) -> AgreementDto:
     """
     :param agreement_id: id of agreement to retrieve
     :param session: The connection session with DB
     :return: if agreement id is available, then retrieve product info, else Not Found
     """
     repository = GenericRepository(session, AgreementDao)
-    agreement_dao: AgreementDao = (await repository.get_one_by_params(['agreement_id'], [agreement_id]))
-    if agreement_dao is None:
-        raise HTTPException(status_code=404, detail='Not found')
-    return AgreementDto(agreement_id=agreement_dao.agreement_id, status=agreement_dao.status)
+    agreement: AgreementDao = (await repository.get_one_by_condition(AgreementDao.agreement_id == agreement_id))
+    if agreement is None:
+        raise HTTPException(status_code=404, detail='Not found.')
+    return agreement.convert_to_dto()
 
 
 @agreement_router.post('',
                        response_model=AgreementDto,
-                       summary='Add new agreement')
+                       summary='Add new agreement.')
 async def add_agreement(
     agreement_to_post: AgreementCreateDto,
     session: AsyncSession = Depends(get_session)
@@ -43,73 +43,21 @@ async def add_agreement(
     :param session: The connection session with DB
     :return: If agreement not in DB, create, then return agreement
     """
-    repository = GenericRepository(session, AgreementDao)
-    agreement: AgreementDao = (await repository.get_one_by_params(
-        ['agreement_id'],
-        [agreement_to_post.agreement_id]
-    ))
-    if agreement:
-        return agreement.convert_to_dto()
+    agreement: AgreementDto = await create_agreement_db(agreement_to_post, session)
 
-    agreement_n = AgreementDao(
-        agreement_id=agreement_to_post.agreement_id,
-        person_id=agreement_to_post.person_id,
-        status=AgreementStatus.NEW.value
-    )
-    await repository.save(agreement_n)
-    return agreement_n.convert_to_dto()
-
-
-@agreement_router.get(
-    '/new',
-    response_model=list[AgreementDto],
-    summary='Get list of new agreements'
-)
-async def get_new_agreements(session: AsyncSession = Depends(get_session)) -> list[AgreementDto]:
-    """
-    Retrieve all new agreements.
-    :param session: The connection session with DB
-    :return: List of Json represented agreements with status NEW
-    """
-    agreements: Sequence[AgreementDao] = (await GenericRepository(session, AgreementDao).get_all_by_params_and(
-        ['status', ],
-        [AgreementStatus.NEW.value, ]
-    ))
-    if len(agreements) == 0:
-        raise HTTPException(status_code=404, detail='Not found')
-    return [agreement.convert_to_dto() for agreement in agreements]
-
-
-@agreement_router.get(
-    '/scored',
-    response_model=list[AgreementDto],
-    summary='Get list of scored agreements'
-)
-async def get_scored_agreements(session: AsyncSession = Depends(get_session)) -> list[AgreementDto]:
-    """
-    Retrieve all scored agreements.
-    :param session: The connection session with DB
-    :return: List of Json represented agreements with status REJECT and APPROVED
-    """
-    agreements: Sequence[AgreementDao] = (await GenericRepository(session, AgreementDao).get_all_by_params_or(
-        ['status', 'status', ],
-        [AgreementStatus.REJECTED.value, AgreementStatus.APPROVED.value, ]
-    ))
-    if len(agreements) == 0:
-        raise HTTPException(status_code=404, detail='Not found')
-    return [agreement.convert_to_dto() for agreement in agreements]
+    return agreement
 
 
 @agreement_router.post('/{agreement_id}', summary='Update status by id')
-async def change_agreement_status(agreement_id: int, status: str, session: AsyncSession = Depends(get_session)):
-    repository = GenericRepository(session, AgreementDao)
-    agreement: AgreementDao = (await repository.get_one_by_params(['agreement_id'], [agreement_id]))
-    if agreement is None:
-        raise HTTPException(status_code=404, detail='Заявка с указанным ID не существует')
+async def change_agreement_status(agreement_id: int, status: str,
+                                  session: AsyncSession = Depends(get_session)) -> Response:
+    """
+    Change status for agreement by id.
+    :param agreement_id: agreement to add
+    :param status: new status
+    :param session: The connection session with DB
+    :return: If agreement not in DB, create, then return agreement
+    """
+    await change_agreement_status(agreement_id=agreement_id, new_status=status, session=session)
 
-    await repository.update_property(
-        ['agreement_id'],
-        [agreement.agreement_id],
-        'status',
-        status
-    )
+    return Response(media_type='text/plain', content='Статус обновлен.')

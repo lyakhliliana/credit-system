@@ -17,7 +17,7 @@ port = os.getenv('PRODUCT_ENGINE_PORT')
 async def scoring_request(msg):
     request_info = AgreementDto(**json.loads(msg.value.decode('ascii')))
     logging.info('START SCORING REQUEST')
-    url = f'{host}:{port}/agreement/{request_info.person_id}'
+    url = f'{host}:{port}/agreements/{request_info.person_id}'
     async with httpx.AsyncClient() as client:
         response = (await client.get(url))
         logging.info('SCORING RESPONSE: %s', response.json())

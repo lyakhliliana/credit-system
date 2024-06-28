@@ -1,6 +1,7 @@
 from typing import Sequence, TypeVar, Generic
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from sqlalchemy import select, delete, update, ColumnElement
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from common.base_orm_model import BaseOrmModel
 
@@ -29,6 +30,12 @@ class GenericRepository(Generic[T]):
         for i in range(1, len(values)):
             f &= self.__entity.__table__.columns[columns[i]] == values[i]
         return (await self.__session.execute(select(self.__entity).where(f))).unique().scalars().one_or_none()
+
+    async def get_one_by_condition(self, condition) -> T:
+        return (await self.__session.execute(select(self.__entity).where(condition))).unique().scalars().one_or_none()
+
+    async def get_all_by_condition(self, condition) -> Sequence[T]:
+        return (await self.__session.execute(select(self.__entity).where(condition))).unique().scalars().all()
 
     async def get_all(self) -> Sequence[T]:
         return (await self.__session.execute(select(self.__entity))).unique().scalars().all()

@@ -7,7 +7,7 @@ from gateway.src.models.dto import ApplicationCreateDto
 
 application_router = APIRouter(prefix='/application')
 
-host = os.getenv('PRODUCT_ENGINE_PORT')
+host = os.getenv('PRODUCT_ENGINE_HOST')
 port = os.getenv('PRODUCT_ENGINE_PORT')
 
 

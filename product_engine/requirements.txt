@@ -10,3 +10,4 @@ apscheduler==3.10.4
 aiokafka==0.10.0
 numpy-financial==1.0.0
 numpy==1.26.4
+asyncio==3.4.3

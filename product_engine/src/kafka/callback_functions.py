@@ -3,17 +3,16 @@ import json
 from common.generic_repository import GenericRepository
 from common.status import PaymentStatus, AgreementStatus
 from product_engine.src.models.dao import AgreementDao, PaymentDao
-from product_engine.src.models.dto import KafkaAgreementDto
+from product_engine.src.models.dto import KafkaAgreementDto, AgreementDto
 from product_engine.src.models.session_maker import get_session
 from product_engine.src.utils.payment_math import calc_periods
 
 
-async def _get_agreement_by_id(agreement_id):
-    agreement = None
+async def _get_agreement_by_id(agreement_id) -> AgreementDto:
     async for session in get_session():
-        agreement = (await GenericRepository(session, AgreementDao).get_one_by_params(['agreement_id'], [
-            agreement_id])).convert_to_dto()
-    return agreement
+        agreement = (await GenericRepository(session, AgreementDao).get_one_by_condition(
+            AgreementDao.agreement_id == agreement_id)).convert_to_dto()
+        return agreement
 
 
 async def _save_payment_schedule(periods, agreement_id):
@@ -29,17 +28,18 @@ async def _save_payment_schedule(periods, agreement_id):
             await repository.save(payment_to_post)
 
 
-async def _change_agreement_status_to_active(agreement_id):
+async def _change_agreement_status(agreement_id, status: str):
     async for session in get_session():
         repository = GenericRepository(session, AgreementDao)
         await repository.update_property(['agreement_id'], [agreement_id], 'status',
-                                         AgreementStatus.ACTIVE.value)
+                                         status)
 
 
 async def make_payment_schedule(msg):
     request_info = KafkaAgreementDto(**json.loads(msg.value.decode('ascii')))
 
     if request_info.status != AgreementStatus.APPROVED.value:
+        await _change_agreement_status(request_info.agreement_id, AgreementStatus.CLOSED.value)
         return
 
     agreement = await _get_agreement_by_id(request_info.agreement_id)
@@ -54,4 +54,4 @@ async def make_payment_schedule(msg):
 
     await _save_payment_schedule(payment_periods, request_info.agreement_id)
 
-    await _change_agreement_status_to_active(request_info.agreement_id)
+    await _change_agreement_status(request_info.agreement_id, AgreementStatus.ACTIVE.value)

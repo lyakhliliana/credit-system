@@ -24,6 +24,3 @@ def calc_periods(rate: float, n_per: int, present_value: float, activation_date:
 
     return payments
 
-
-# import datetime
-# print(calc_periods(0.22, 36, 500000, datetime.date(2024, 4, 27)))
